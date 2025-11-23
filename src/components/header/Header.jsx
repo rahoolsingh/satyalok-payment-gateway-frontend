@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Menu, X, Bug, ExternalLink } from "lucide-react";
+import { Menu, X, Bug } from "lucide-react";
 import logo from "../../assets/logo.png";
 
 const baseURL = "https://satyalok.in";
@@ -31,11 +31,8 @@ export default function Header() {
         if (isMenuOpen) {
             document.body.style.overflow = "hidden";
         } else {
-            // FIX: Use empty string instead of "unset" for better mobile support
             document.body.style.overflow = "";
         }
-
-        // Cleanup function to ensure scroll is restored if component unmounts
         return () => {
             document.body.style.overflow = "";
         };
@@ -45,12 +42,20 @@ export default function Header() {
 
     return (
         <header
-            className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled || isMenuOpen
-                ? "bg-white/90 backdrop-blur-md shadow-sm"
-                : "bg-white"
+            className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+                // LOGIC UPDATE: 
+                // 1. If Menu is Open: Force solid white background (no transparency).
+                // 2. If Scrolled: White background with slight blur and shadow.
+                // 3. Default: White background.
+                isMenuOpen
+                    ? "bg-white"
+                    : scrolled
+                        ? "bg-white/95 backdrop-blur-md shadow-sm"
+                        : "bg-white"
                 }`}
         >
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            {/* WIDTH UPDATE: Removed 'max-w-7xl' and 'mx-auto' to allow full width */}
+            <div className="w-full px-4 sm:px-6 lg:px-12">
                 <div className="flex h-20 items-center justify-between">
                     {/* Logo Section */}
                     <div className="flex-shrink-0 cursor-pointer transition-opacity hover:opacity-80">
@@ -104,7 +109,7 @@ export default function Header() {
             <div
                 className={`fixed inset-0 z-40 transform bg-white transition-transform duration-300 ease-in-out lg:hidden ${isMenuOpen ? "translate-x-0" : "translate-x-full"
                     }`}
-                style={{ top: "80px" }} // Adjust based on header height
+                style={{ top: "80px" }}
             >
                 <div className="flex h-full flex-col justify-between overflow-y-auto p-6 pb-24">
                     <nav className="space-y-2">
