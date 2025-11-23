@@ -31,8 +31,14 @@ export default function Header() {
         if (isMenuOpen) {
             document.body.style.overflow = "hidden";
         } else {
-            document.body.style.overflow = "unset";
+            // FIX: Use empty string instead of "unset" for better mobile support
+            document.body.style.overflow = "";
         }
+
+        // Cleanup function to ensure scroll is restored if component unmounts
+        return () => {
+            document.body.style.overflow = "";
+        };
     }, [isMenuOpen]);
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -40,8 +46,8 @@ export default function Header() {
     return (
         <header
             className={`sticky top-0 z-50 w-full transition-all duration-300 ${scrolled || isMenuOpen
-                    ? "bg-white/90 backdrop-blur-md shadow-sm"
-                    : "bg-white"
+                ? "bg-white/90 backdrop-blur-md shadow-sm"
+                : "bg-white"
                 }`}
         >
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

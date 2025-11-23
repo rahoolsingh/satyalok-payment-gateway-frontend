@@ -35,8 +35,8 @@ const InputField = ({ label, name, type, placeholder, value, onChange, error, ic
                 value={value}
                 onChange={onChange}
                 className={`w-full rounded-lg border px-4 py-3 text-sm outline-none transition-all duration-200 placeholder:text-slate-400 ${error
-                        ? "border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-100"
-                        : "border-slate-200 bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
+                    ? "border-red-300 bg-red-50 focus:border-red-500 focus:ring-4 focus:ring-red-100"
+                    : "border-slate-200 bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
                     } ${Icon ? "pl-10" : ""}`}
             />
             {Icon && (
@@ -146,7 +146,8 @@ function Payment() {
     if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loading /></div>;
 
     return (
-        <div className="flex min-h-screen flex-col bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
+        // FIX: Added 'overflow-x-hidden' and 'w-full' to prevent horizontal scroll issues
+        <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
             <Header />
 
             <div className="flex flex-grow flex-col lg:flex-row">
@@ -278,8 +279,8 @@ function Payment() {
                                             type="button"
                                             onClick={() => setFormData({ ...formData, amount: amt.toString() })}
                                             className={`rounded border py-2 text-sm font-medium transition-all active:scale-95 ${formData.amount === amt.toString()
-                                                    ? "border-blue-600 bg-blue-600 text-white shadow-md"
-                                                    : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:bg-blue-50"
+                                                ? "border-blue-600 bg-blue-600 text-white shadow-md"
+                                                : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:bg-blue-50"
                                                 }`}
                                         >
                                             ₹{amt.toLocaleString()}
