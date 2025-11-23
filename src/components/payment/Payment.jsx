@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import PropTypes from "prop-types";
 import Field from "./Field"; // Assuming Field matches the prop structure
-import bgImage from "../../assets/images/image_3.png";
+import bgImage from "../../assets/images/image_3.jpeg";
 import logo from "../../assets/logo_white.png";
 import Header from "../header/Header";
 import Loading from "../loading/Loading";
