@@ -9,25 +9,27 @@ function Success({
     transactionId,
     paymentInstrument,
     message,
+    createdAt
 }) {
     const formatAmount = (amount) => {
         return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     };
 
-    const convertToTimestamp = (input) => {
-        // Extract the date-time portion from the input string
-        const dateTimePart = input.slice(1, 15); // Skip the 'T' and take 14 characters
+    const convertToTimestamp = (isoString) {
+        const date = new Date(isoString);
 
-        // Parse the date-time part into components
-        const year = parseInt("20" + dateTimePart.slice(0, 2), 10); // Assuming the year is 20YY
-        const month = dateTimePart.slice(2, 4);
-        const day = dateTimePart.slice(4, 6);
-        const hour = dateTimePart.slice(6, 8);
-        const minute = dateTimePart.slice(8, 10);
+        // Pad numbers with a leading zero if single digit (e.g., 9 -> 09)
+        const pad = (num) => num.toString().padStart(2, '0');
 
-        // Return the formatted string in the format "DD-MM-YYYY HH:MM"
-        return `${day}-${month}-${year} ${hour}:${minute}`;
-    };
+        const day = pad(date.getDate());
+        const month = pad(date.getMonth() + 1); // Months are 0-indexed
+        const year = date.getFullYear();
+
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+
+        return `${day}-${month}-${year} ${hours}:${minutes}`;
+    }
 
     const TransactionNumber = {
         UPI: {
@@ -80,7 +82,7 @@ function Success({
                                 Payment Time
                             </p>
                             <p className="text-sm font-mono">
-                                {convertToTimestamp(transactionId)}
+                                {convertToTimestamp(createdAt)}
                             </p>
                         </div>
 
