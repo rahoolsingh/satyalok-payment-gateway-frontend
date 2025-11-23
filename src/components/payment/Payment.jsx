@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Field from "./Field"; // Import the Field component
+import PropTypes from "prop-types";
+import Field from "./Field"; // Assuming Field matches the prop structure
 import bgImage from "../../assets/images/image_3.png";
 import logo from "../../assets/logo_white.png";
 import Header from "../header/Header";
@@ -25,10 +26,8 @@ function Payment() {
     const [errorMessage, setErrorMessage] = useState("");
     const [serverStatus, setServerStatus] = useState("checking");
     const [serverVersion, setServerVersion] = useState("");
-
     const [loading, setLoading] = useState(false);
 
-    // useEffect to call the API to wake up the backend server
     useEffect(() => {
         const wakeUpBackend = async () => {
             try {
@@ -48,17 +47,17 @@ function Payment() {
 
     const fieldsConfig = [
         {
-            label: "Name",
+            label: "Full Name",
             name: "name",
             type: "text",
-            placeholder: "Enter your full name",
+            placeholder: "J. Doe",
             validation: (value) => !value.trim() && "Name is required",
         },
         {
-            label: "Email",
+            label: "Email Address",
             name: "email",
             type: "email",
-            placeholder: "Enter your email",
+            placeholder: "you@example.com",
             validation: (value) => {
                 if (!value) return "Email is required";
                 if (!/\S+@\S+\.\S+/.test(value)) return "Email is invalid";
@@ -66,10 +65,10 @@ function Payment() {
             },
         },
         {
-            label: "Mobile No",
+            label: "Mobile Number",
             name: "phone",
             type: "tel",
-            placeholder: "Enter your mobile number",
+            placeholder: "9876543210",
             validation: (value) => {
                 if (!value) return "Mobile number is required";
                 if (!/^\d{10}$/.test(value))
@@ -78,10 +77,10 @@ function Payment() {
             },
         },
         {
-            label: "Donation Amount",
+            label: "Donation Amount (INR)",
             name: "amount",
             type: "number",
-            placeholder: "Enter donation amount",
+            placeholder: "Amount",
             validation: (value) => {
                 if (!value) return "Amount is required";
                 if (isNaN(value) || value <= 0)
@@ -93,7 +92,7 @@ function Payment() {
             label: "PAN Number",
             name: "pan",
             type: "text",
-            placeholder: "Enter your PAN number",
+            placeholder: "ABCDE1234F",
             validation: (value) =>
                 taxExemption &&
                 !value &&
@@ -104,16 +103,14 @@ function Payment() {
     const predefinedAmounts = [100, 500, 1000, 5000, 10000];
 
     const validate = () => {
-        const errors = {};
-
+        const newErrors = {};
         fieldsConfig.forEach((field) => {
             const error = field.validation(formData[field.name]);
             if (error) {
-                errors[field.name] = error;
+                newErrors[field.name] = error;
             }
         });
-
-        return errors;
+        return newErrors;
     };
 
     const handleChange = (e) => {
@@ -137,7 +134,6 @@ function Payment() {
                 window.location.href =
                     res.data.data.instrumentResponse.redirectInfo.url;
             } else {
-                console.error("Failed to process payment:", res.data.message);
                 setErrorMessage(
                     res.data.message || "Failed to process payment."
                 );
@@ -154,170 +150,157 @@ function Payment() {
         return <Maintainance />;
     }
 
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-screen bg-slate-50">
+                <Loading />
+            </div>
+        );
+    }
+
     return (
-        <div className="">
+        <div className="flex flex-col min-h-screen bg-white font-sans">
             <Header />
-            {!loading && (
-                <div className="min-h-dvh flex flex-col lg:flex-row bgre">
-                    {/* Left Section with Image and Text */}
-                    <div className="relative drop-shadow-lg w-full lg:w-1/2 xl:w-2/3 h-64 lg:h-auto bg-red-500">
+
+            {/* Main Content Wrapper */}
+            <div className="flex-grow flex flex-col lg:flex-row">
+
+                {/* Left Section: Hero/Image */}
+                <div className="lg:w-5/12 xl:w-1/2 relative bg-slate-900 h-64 lg:h-auto lg:min-h-screen order-1 lg:order-1 overflow-hidden">
+                    {/* Background Image */}
+                    <img
+                        src={bgImage}
+                        alt="Donate to Satyalok"
+                        className="absolute inset-0 w-full h-full object-cover opacity-80"
+                    />
+
+                    {/* Gradient Overlay for Readability */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent lg:bg-gradient-to-r lg:from-black/80 lg:via-black/40 lg:to-transparent"></div>
+
+                    {/* Content */}
+                    <div className="absolute inset-0 flex flex-col justify-end p-8 lg:p-12 text-white z-10">
                         <img
-                            src={bgImage}
-                            alt="Donate to Satyalok"
-                            className="object-cover h-full w-full"
+                            src={logo}
+                            alt="Satyalok"
+                            className="w-32 lg:w-48 mb-6 opacity-90"
                         />
+                        <h1 className="text-2xl lg:text-4xl font-extrabold leading-tight mb-3">
+                            Nurturing the Future Together 🌟
+                        </h1>
+                        <p className="text-sm lg:text-lg text-slate-200 font-medium mb-6 max-w-md">
+                            Your contribution brings education, health, and hope to those who need it most.
+                        </p>
 
-                        <div className="absolute inset-0 bg-black opacity-50"></div>
-
-                        <div className="absolute inset-0 flex flex-col items-start justify-end p-6 lg:p-12">
-                            <img
-                                src={logo}
-                                alt="Satyalok"
-                                className="w-48 lg:w-96 max-w-full grayscale brightness-200"
-                            />
-                            <h1 className=" md:block text-white text-xl lg:text-2xl xl:text-4xl font-bold">
-                                Nurturing the Future Together 🌟
-                            </h1>
-
-                            <p className="hidden md:block text-white text-sm lg:text-base font-bold mt-1">
-                                Your donation can help us in providing education
-                                to the underprivileged children.
-                            </p>
-
-                            <p className="hidden md:block text-white text-sm lg:text-base font-bold">
-                                Donate now and make a difference.
-                            </p>
-
-                            <p className="hidden lg:block text-white font-medium text-xs lg:text-sm mt-4 lg:mt-8">
-                                Your donated money will be used for the welfare
-                                of the society. Satyalok works in the field of
-                                education, health, and environment. Your
-                                donation will be used for the following
-                                purposes: Satyalok For Education | Satyalok For
-                                Health | Satyalok For Environment
-                            </p>
-
-                            <p className="text-white text-xs mt-2 lg:mt-4 hidden md:block">
-                                <i className="fas fa-info-circle mr-1"></i>
-                                The image used in the background is AI generated
-                                and is not real. It is used for representation
-                                purposes only.
-                            </p>
-                            <p className="text-white font-light text-xs mt-2 lg:mt-4 md:hidden">
-                                Image used in the background is AI generated and
-                                is not real.
+                        <div className="hidden lg:block space-y-4 text-xs text-slate-400 border-t border-white/20 pt-6">
+                            <p className="font-mono uppercase tracking-wider text-slate-500 mb-2">Impact Areas</p>
+                            <div className="flex flex-wrap gap-2">
+                                <span className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">Education</span>
+                                <span className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">Health</span>
+                                <span className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">Environment</span>
+                            </div>
+                            <p className="italic mt-4 opacity-60">
+                                Note: Background image is AI generated for representation.
                             </p>
                         </div>
                     </div>
+                </div>
 
-                    {/* Right Section with Form */}
-                    <div className="mx-auto w-full lg:w-1/2 p-6 lg:px-16 lg:py-8 flex flex-col justify-between">
-                        <div>
-                            <h1 className="text-3xl lg:text-4xl font-bold text-blue-600">
-                                <i className="fas fa-hand-holding-heart mr-2"></i>
-                                Donate Now, Make a Difference
-                            </h1>
-                            <p className="text-gray-600 mb-8 max-w-2xl text-xs md:text-sm lg:text-base">
-                                Your small contribution can make a big
-                                difference in someone&apos;s life. Donate now
-                                and help us in providing education to the
-                                underprivileged children. Your donation will be
-                                used for the welfare of the society.
+                {/* Right Section: Form */}
+                <div className="lg:w-7/12 xl:w-1/2 w-full order-2 lg:order-2 flex flex-col bg-white">
+                    <div className="flex-grow p-6 md:p-12 lg:px-20 max-w-3xl mx-auto w-full">
+
+                        {/* Form Header */}
+                        <div className="mb-8">
+                            <h2 className="text-2xl lg:text-3xl font-bold text-slate-800 flex items-center gap-3 mb-2">
+                                <span className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-600 text-lg">
+                                    <i className="fas fa-hand-holding-heart"></i>
+                                </span>
+                                Make a Donation
+                            </h2>
+                            <p className="text-slate-500 text-sm lg:text-base pl-[3.25rem]">
+                                Complete the form below to support our cause.
                             </p>
-                            <form noValidate>
-                                <div className="mb-4 flex flex-col lg:flex-row items-start lg:items-center gap-2">
-                                    <label
-                                        htmlFor="taxExemption"
-                                        className="text-green-800 font-bold"
-                                    >
-                                        Tax Exemption under 80G?
-                                    </label>
+                        </div>
 
-                                    {/* yes / no buttons */}
-                                    <div className="flex items-center">
+                        <form noValidate className="space-y-6">
+
+                            {/* Tax Exemption Toggle (Segmented Control) */}
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                                    <label className="text-sm font-semibold text-slate-700">
+                                        Do you need 80G Tax Exemption?
+                                    </label>
+                                    <div className="bg-slate-200 p-1 rounded-lg inline-flex shrink-0">
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                setTaxExemption(true)
-                                            }
-                                            className={`px-4 outline-none focus:outline-none py-1 border rounded-l-lg ${
-                                                taxExemption
-                                                    ? "bg-green-500 text-white"
-                                                    : "border-gray-300"
-                                            }`}
+                                            onClick={() => setTaxExemption(true)}
+                                            className={`px-6 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${taxExemption
+                                                    ? "bg-white text-blue-700 shadow-sm"
+                                                    : "text-slate-600 hover:text-slate-800"
+                                                }`}
                                         >
                                             Yes
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() =>
-                                                setTaxExemption(false)
-                                            }
-                                            className={`px-4 outline-none focus:outline-none py-1 border rounded-r-lg ${
-                                                !taxExemption
-                                                    ? "bg-red-500 text-white"
-                                                    : "border-gray-300"
-                                            }`}
+                                            onClick={() => setTaxExemption(false)}
+                                            className={`px-6 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${!taxExemption
+                                                    ? "bg-white text-slate-900 shadow-sm"
+                                                    : "text-slate-600 hover:text-slate-800"
+                                                }`}
                                         >
                                             No
                                         </button>
                                     </div>
                                 </div>
+                                {taxExemption && (
+                                    <p className="text-xs text-blue-600 bg-blue-50 p-2 rounded flex items-center gap-2">
+                                        <i className="fas fa-info-circle"></i>
+                                        PAN number is mandatory for 80G exemption.
+                                    </p>
+                                )}
+                            </div>
 
+                            {/* Fields Mapping */}
+                            <div className="space-y-5">
                                 {fieldsConfig.map((field) => {
-                                    if (field.name === "pan" && !taxExemption)
-                                        return null; // Skip PAN field if taxExemption is false
+                                    // Skip PAN if not needed
+                                    if (field.name === "pan" && !taxExemption) return null;
 
                                     if (field.name === "amount") {
                                         return (
-                                            <div
-                                                key={field.name}
-                                                className="mb-4"
-                                            >
+                                            <div key={field.name} className="space-y-3">
                                                 <Field
                                                     field={field}
                                                     value={formData[field.name]}
                                                     onChange={handleChange}
                                                     error={errors[field.name]}
-                                                    className="mt-4"
                                                 />
 
-                                                <label className="block text-gray-700 font-semibold sr-only">
-                                                    or select a predefined
-                                                    amount:
-                                                </label>
-                                                <div className="flex items-center mt-2 gap-2 flex-wrap text-sm lg:text-base">
-                                                    {predefinedAmounts.map(
-                                                        (amount) => (
-                                                            <button
-                                                                key={amount}
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setFormData(
-                                                                        {
-                                                                            ...formData,
-                                                                            amount: amount.toString(),
-                                                                        }
-                                                                    )
-                                                                }
-                                                                className={`px-4 py-1 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400 ${
-                                                                    formData.amount ===
-                                                                    amount.toString()
-                                                                        ? "bg-blue-500 text-white"
-                                                                        : "border-gray-300"
-                                                                }`}
-                                                            >
-                                                                ₹
-                                                                {amount.toLocaleString()}
-                                                            </button>
-                                                        )
-                                                    )}
+                                                {/* Predefined Amount Grid */}
+                                                <div>
+                                                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
+                                                        Quick Select Amount
+                                                    </label>
+                                                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                                        {predefinedAmounts.map((amt) => {
+                                                            const isSelected = formData.amount === amt.toString();
+                                                            return (
+                                                                <button
+                                                                    key={amt}
+                                                                    type="button"
+                                                                    onClick={() => setFormData({ ...formData, amount: amt.toString() })}
+                                                                    className={`py-2 px-1 text-sm font-medium rounded border transition-all duration-200 ${isSelected
+                                                                            ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-200 ring-offset-1"
+                                                                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50"
+                                                                        }`}
+                                                                >
+                                                                    ₹{amt.toLocaleString()}
+                                                                </button>
+                                                            )
+                                                        })}
+                                                    </div>
                                                 </div>
-
-                                                <p className="text-xs text-gray-500 mt-2">
-                                                    Choose a predefined amount
-                                                    or enter a custom amount
-                                                </p>
                                             </div>
                                         );
                                     }
@@ -329,109 +312,51 @@ function Payment() {
                                             value={formData[field.name]}
                                             onChange={handleChange}
                                             error={errors[field.name]}
-                                            className="mb-4"
                                         />
                                     );
                                 })}
+                            </div>
 
+                            {/* Submit Button */}
+                            <div className="pt-4">
                                 <button
                                     type="button"
                                     onClick={handleFormSubmit}
-                                    className="w-full max-w-44 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+                                    className="w-full bg-blue-600 text-white text-lg font-semibold py-3.5 rounded-xl shadow-lg hover:bg-blue-700 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
                                 >
-                                    <i className="fas fa-hand-holding-heart mr-2"></i>
-                                    Make Payment
+                                    <span>Proceed to Pay</span>
+                                    <i className="fas fa-arrow-right text-sm"></i>
                                 </button>
 
-                                <p className="text-xs text-blue-500 mt-2">
-                                    <i className="fas fa-lock mr-1"></i>
-                                    Your payment is secure & safe.
-                                </p>
-                            </form>
+                                <div className="mt-4 flex items-center justify-center text-slate-400 text-xs gap-4">
+                                    <span className="flex items-center gap-1"><i className="fas fa-lock"></i> SSL Secured</span>
+                                    <span className="flex items-center gap-1"><i className="fas fa-shield-alt"></i> 100% Safe</span>
+                                </div>
+                            </div>
+                        </form>
 
-                            <p className="text-xs text-gray-500 mt-4">
-                                By clicking on the &quot;Make Payment&quot;
-                                button, you agree to our{" "}
-                                <a
-                                    href="https://www.satyalok.in/terms-condition"
-                                    className="underline underline-offset-4"
-                                >
-                                    Terms & Conditions
-                                </a>{" "}
-                                and{" "}
-                                <a
-                                    href="https://www.satyalok.in/privacy-policy"
-                                    className="underline underline-offset-4"
-                                >
-                                    Privacy Policy
-                                </a>
-                                .
+                        {/* Footer Links */}
+                        <div className="mt-10 pt-6 border-t border-slate-100 text-center">
+                            <p className="text-xs text-slate-400 mb-3">
+                                By continuing, you agree to Satyalok's <a href="/terms-condition" className="underline hover:text-slate-600">Terms</a> & <a href="/privacy-policy" className="underline hover:text-slate-600">Privacy Policy</a>
                             </p>
-                        </div>
-                        <footer className="mt-12 lg:mt-16">
-                            <ul className="flex gap-2 lg:gap-5 text-xs md:text-sm text-gray-600">
-                                <li>
-                                    <a
-                                        className="hover:text-gray-800 hover:underline"
-                                        href="https://www.satyalok.in"
-                                    >
-                                        Home
-                                    </a>
-                                </li>
-                                <li>
-                                    <a
-                                        className="hover:text-gray-800 hover:underline"
-                                        href="https://www.satyalok.in/privacy-policy"
-                                    >
-                                        Privacy Policy
-                                    </a>
-                                </li>
-                                <li>
-                                    <a
-                                        className="hover:text-gray-800 hover:underline"
-                                        href="https://www.satyalok.in/terms-condition"
-                                    >
-                                        Terms & Conditions
-                                    </a>
-                                </li>
-                            </ul>
 
-                            <p className="text-xs md:text-sm text-gray-500 mt-2">
-                                &copy; 2024 Satyalok. All rights reserved.
-                                <span className="text-xs font-extralight ml-2 text-black">
-                                    v
-                                    {import.meta.env.VITE_VERCEL_GIT_COMMIT_SHA?.slice(
-                                        -3
-                                    ) || "local"}
-                                    {/*server status:*/}
-                                    {serverStatus === "alive" && (
-                                        <span className="text-green-500 ml-2">
-                                            <i className="fas fa-check-circle"></i>{" "}
-                                            {serverVersion}
-                                        </span>
-                                    )}
-                                    {serverStatus === "error" && (
-                                        <span className="text-red-500 ml-2">
-                                            <i className="fas fa-exclamation-triangle"></i>{" "}
-                                        </span>
-                                    )}
-                                    {serverStatus === "checking" && (
-                                        <span className="text-yellow-500 ml-2">
-                                            <i className="fas fa-spinner fa-spin"></i>{" "}
-                                        </span>
-                                    )}
+                            {/* Server Status Indicator */}
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50 border border-slate-100">
+                                <div className="relative flex h-2 w-2">
+                                    {serverStatus === "alive" && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>}
+                                    <span className={`relative inline-flex rounded-full h-2 w-2 ${serverStatus === "alive" ? "bg-green-500" :
+                                            serverStatus === "error" ? "bg-red-500" : "bg-yellow-500"
+                                        }`}></span>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-mono">
+                                    System: {serverStatus === "checking" ? "Connecting..." : serverStatus === "alive" ? `Online (${serverVersion || "v1.0"})` : "Offline"}
                                 </span>
-                            </p>
-                        </footer>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            )}
-
-            {loading && (
-                <div className="flex items-center justify-center h-screen">
-                    <Loading />
-                </div>
-            )}
+            </div>
 
             {errorMessage && (
                 <ErrorCard
@@ -442,5 +367,9 @@ function Payment() {
         </div>
     );
 }
+
+Payment.propTypes = {
+    // Define prop types if Payment receives any props, though here it seems self-contained
+};
 
 export default Payment;
