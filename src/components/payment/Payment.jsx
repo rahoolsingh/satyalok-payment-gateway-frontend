@@ -50,7 +50,7 @@ function Payment() {
             label: "Full Name",
             name: "name",
             type: "text",
-            placeholder: "J. Doe",
+            placeholder: "Your Name",
             validation: (value) => !value.trim() && "Name is required",
         },
         {
@@ -68,7 +68,7 @@ function Payment() {
             label: "Mobile Number",
             name: "phone",
             type: "tel",
-            placeholder: "9876543210",
+            placeholder: "XXXXXXXXXX",
             validation: (value) => {
                 if (!value) return "Mobile number is required";
                 if (!/^\d{10}$/.test(value))
