@@ -15,7 +15,7 @@ function Success({
         return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     };
 
-    const convertToTimestamp = (isoString) {
+    const convertToTimestamp = (isoString) => {
         const date = new Date(isoString);
 
         // Pad numbers with a leading zero if single digit (e.g., 9 -> 09)
