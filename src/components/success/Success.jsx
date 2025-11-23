@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import logo from "../../assets/logo.png";
-import paymentDoneAnimation from "../../assets/Successfully-Done.gif";
-import receiptBg from "../../assets/receipt-bg.gif";
+// Assuming you still want to use the gif, but a static icon is often more professional for the receipt itself.
+// If you prefer the gif, replace the CheckCircleIcon SVG below with your img tag.
 
 function Success({
     amount,
@@ -9,196 +9,145 @@ function Success({
     transactionId,
     paymentInstrument,
     message,
-    createdAt
+    createdAt,
 }) {
-    const formatAmount = (amount) => {
-        return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    const formatAmount = (val) => {
+        return val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     };
 
-    const convertToTimestamp = (isoString) => {
+    const formatDate = (isoString) => {
+        if (!isoString) return "";
         const date = new Date(isoString);
-
-        // Pad numbers with a leading zero if single digit (e.g., 9 -> 09)
-        const pad = (num) => num.toString().padStart(2, '0');
-
-        const day = pad(date.getDate());
-        const month = pad(date.getMonth() + 1); // Months are 0-indexed
-        const year = date.getFullYear();
-
-        const hours = pad(date.getHours());
-        const minutes = pad(date.getMinutes());
-
-        return `${day}-${month}-${year} ${hours}:${minutes}`;
-    }
+        return new Intl.DateTimeFormat('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }).format(date);
+    };
 
     const TransactionNumber = {
-        UPI: {
-            label: "UTR Number",
-            field: "utr",
-        },
-        CARD: {
-            label: "Card Type",
-            field: "cardType",
-        },
+        UPI: { label: "UTR Number", field: "utr" },
+        CARD: { label: "Card Type", field: "cardType" },
+    };
+
+    // Helper to render a data row
+    const DataRow = ({ label, value, fontClass = "font-mono" }) => (
+        <div className="flex flex-col">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">
+                {label}
+            </span>
+            <span className={`text-sm text-slate-900 break-all ${fontClass}`}>
+                {value}
+            </span>
+        </div>
+    );
+
+    DataRow.propTypes = {
+        label: PropTypes.string.isRequired,
+        value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        fontClass: PropTypes.string,
     };
 
     return (
-        <div className="max-w-lg mx-auto flex flex-col justify-center items-center">
-            <div className="relative bg-white overflow-hidden drop-shadow-2xl print:drop-shadow-none rounded-lg">
-                {/* Reflection effect sun */}
-                <i className="absolute bottom-8 right-0 -m-8 w-32 h-32 rounded-full bg-gradient-to-b from-yellow-500 via-yellow-500/40 to-transparent opacity-50 z-0"></i>
-
-                <img
-                    className="w-full max-w-52 object-center z-0 m-auto -mb-16"
-                    src={receiptBg}
-                    alt=""
-                />
-
-                <div className="relative p-8">
-                    <div className="">
-                        <p className="text-xl font-semibold text-center text-green-500 mb-5">
-                            Donation Received
-                        </p>
-                        <h1 className="text-2xl font-extrabold font-sans text-center text-green-500">
-                            <span className="mr-1 font-extrabold">INR</span>
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 print:bg-white print:p-0">
+            <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100 print:shadow-none print:border-none">
+                
+                {/* Header Section */}
+                <div className="bg-emerald-50 p-8 text-center border-b border-emerald-100">
+                    <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                        {/* Simple SVG Checkmark - simpler and cleaner than a GIF for a receipt */}
+                        <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <h2 className="text-xl font-bold text-emerald-800 mb-1">Donation Successful</h2>
+                    <p className="text-emerald-600 font-medium">{message}</p>
+                    
+                    <div className="mt-6">
+                        <span className="text-4xl font-extrabold text-slate-900">
+                            <span className="text-2xl text-slate-500 mr-1">₹</span>
                             {formatAmount(amount / 100)}
-                        </h1>
-
-                        <p className="font-medium text-center font-sans">
-                            {message}
-                        </p>
+                        </span>
                     </div>
+                </div>
 
-                    <div className="grid md:grid-cols-2 md:gap-2 my-4">
-                        <div className="md:border md:px-3 py-2 border-gray-700">
-                            <p className="text-sm text-blue-900">Ref. Number</p>
-                            <p className="text-sm font-mono">
-                                {merchantTransactionId}
-                            </p>
-                        </div>
+                {/* Ticket Details */}
+                <div className="p-6 sm:p-8">
+                    {/* Transaction Details Grid */}
+                    <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+                        <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                            <DataRow 
+                                label="Date & Time" 
+                                value={formatDate(createdAt)} 
+                            />
+                            <DataRow 
+                                label="Ref. Number" 
+                                value={merchantTransactionId} 
+                            />
+                            <DataRow 
+                                label="PhonePe ID" 
+                                value={transactionId} 
+                            />
+                            <DataRow 
+                                label="Payment Method" 
+                                value={paymentInstrument.type} 
+                            />
 
-                        <div className="md:border md:px-3 py-2 border-gray-700">
-                            <p className="text-sm text-blue-900">
-                                Payment Time
-                            </p>
-                            <p className="text-sm font-mono">
-                                {convertToTimestamp(createdAt)}
-                            </p>
-                        </div>
-
-                        <div className="md:border md:px-3 py-2 border-gray-700">
-                            <p className="text-sm text-blue-900">
-                                PhonePe Transaction ID
-                            </p>
-                            <p className="text-sm font-mono">{transactionId}</p>
-                        </div>
-
-                        <div className="md:border md:px-3 py-2 border-gray-700">
-                            <p className="text-sm text-blue-900">
-                                Payment Method
-                            </p>
-                            <p className="text-sm font-mono">
-                                {paymentInstrument.type}
-                            </p>
-                        </div>
-
-                        {paymentInstrument.type in TransactionNumber && (
-                            <div className="md:border md:px-3 py-2 border-gray-700 md:col-span-2">
-                                <p className="text-sm text-blue-900">
-                                    {
-                                        TransactionNumber[
-                                            paymentInstrument.type
-                                        ].label
-                                    }
-                                </p>
-                                <p className="text-sm font-mono">
-                                    {paymentInstrument[
-                                        TransactionNumber[
-                                            paymentInstrument.type
-                                        ]?.field
-                                    ].replace("_", " ")}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    <p className="text-justify text-xs text-gray-700 border border-gray-700 border-dashed -mx-2 sm:mx-0 p-2">
-                        Dear Donor,
-                        <br />
-                        Thank you for your generous donation. Your small
-                        contribution can make a big difference. Your donated
-                        amount will be used for the welfare of society. Thank
-                        you for your support ❤️.
-                        <br />
-                        <br />
-                        Regards,
-                        <br />
-                        Satyalok Team
-                    </p>
-
-                    <div className="my-8">
-                        <img
-                            src={logo}
-                            alt="Satyalok logo"
-                            className="max-w-48"
-                        />
-
-                        <div>
-                            <p className="text-sm font-bold">
-                                Thank you for your donation.
-                            </p>
-                            <p className="text-sm mb-2">
-                                For any queries, contact{" "}
-                                <a
-                                    href="mailto:info@satyalok.in"
-                                    className="underline underline-offset-4"
-                                >
-                                    info@satyalok.in
-                                </a>
-                            </p>
+                            {paymentInstrument.type in TransactionNumber && (
+                                <div className="col-span-2">
+                                    <DataRow
+                                        label={TransactionNumber[paymentInstrument.type].label}
+                                        value={paymentInstrument[TransactionNumber[paymentInstrument.type]?.field]?.replace("_", " ")}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="text-justify text-xs font-sans text-gray-500">
-                        <p className="mb-4">
-                            If you opted for a tax benefit, your certificate is
-                            sent to your email. Please check your inbox. In case
-                            you don&apos;t receive the certificate, please check
-                            your spam folder or contact us at{" "}
-                            <a
-                                href="mailto:info@satyalok.in"
-                                className="underline underline-offset-4"
-                            >
-                                info@satyalok.in
-                            </a>
-                        </p>
+                    {/* Message Section */}
+                    <div className="mt-8">
+                        <div className="flex items-center justify-center mb-4 opacity-80">
+                            <img src={logo} alt="Satyalok" className="h-10 w-auto grayscale hover:grayscale-0 transition-all" />
+                        </div>
+                        <div className="text-center">
+                            <p className="text-sm text-slate-600 italic leading-relaxed px-4">
+                                &quot;Dear Donor, thank you for your generous contribution. Your support helps us make a real difference in society.&quot;
+                            </p>
+                            <p className="mt-4 text-xs text-slate-400">
+                                A copy of this receipt has been sent to your email.
+                                <br />
+                                Questions? <a href="mailto:info@satyalok.in" className="text-indigo-600 hover:underline">info@satyalok.in</a>
+                            </p>
+                        </div>
                     </div>
+                </div>
 
-                    <div className="mt-8 text-center print:hidden divide-x bg-purple-800/90 py-2 rounded-full divide-gray-400 text-white flex text-xs md:text-sm z-20">
-                        <button
-                            className="px-5 flex flex-col md:flex-row md:gap-1.5 justify-center items-center text-center w-[33%]"
-                            onClick={() => window.print()}
-                        >
-                            <i className="fas fa-print"></i>
-                            <span>Print Receipt</span>
-                        </button>
-
-                        <a
-                            className="px-5 flex flex-col md:flex-row md:gap-1.5 justify-center items-center text-center w-[33%]"
-                            href="https://donate.satyalok.in"
-                        >
-                            <i className="fas fa-undo"></i>
-                            <span>Donate Again</span>
-                        </a>
-
-                        <a
-                            className="px-5 flex flex-col md:flex-row md:gap-1.5 justify-center items-center text-center w-[33%]"
-                            href="https://www.satyalok.in"
-                        >
-                            <i className="fas fa-home"></i>
-                            <span>Back Home</span>
-                        </a>
-                    </div>
+                {/* Action Footer */}
+                <div className="bg-slate-50 p-4 border-t border-slate-100 flex flex-col sm:flex-row gap-3 print:hidden">
+                    <button
+                        onClick={() => window.print()}
+                        className="flex-1 inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-white border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition-colors shadow-sm"
+                    >
+                        <i className="fas fa-print text-sm"></i>
+                        <span>Download / Print</span>
+                    </button>
+                    
+                    <a
+                        href="https://donate.satyalok.in"
+                        className="flex-1 inline-flex justify-center items-center gap-2 px-4 py-2.5 bg-indigo-600 border border-transparent rounded-lg text-white font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+                    >
+                        <i className="fas fa-heart text-sm"></i>
+                        <span>Donate Again</span>
+                    </a>
+                </div>
+                
+                <div className="text-center pb-4 pt-2 print:hidden">
+                     <a href="https://www.satyalok.in" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+                        &larr; Return to Home
+                    </a>
                 </div>
             </div>
         </div>
@@ -215,6 +164,7 @@ Success.propTypes = {
         cardType: PropTypes.string,
     }).isRequired,
     message: PropTypes.string.isRequired,
+    createdAt: PropTypes.string, // Added missing propType
 };
 
 export default Success;
