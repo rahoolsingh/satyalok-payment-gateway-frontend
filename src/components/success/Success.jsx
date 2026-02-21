@@ -37,13 +37,13 @@ function Success({
                 ========================================= */}
             <div className="w-full bg-transparent min-h-[85vh] flex items-center py-16 px-4 sm:px-6 lg:px-8 print:hidden font-sans text-slate-900">
                 <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-                    
+
                     {/* Left Column: Impact Copy & Actions (Spans 7 columns) */}
                     <div className="lg:col-span-7 flex flex-col justify-center lg:pr-8">
                         <div className="mb-8 hidden lg:block">
                             <img src={logo} alt="Satyalok" className="h-12 w-auto object-contain grayscale opacity-80" />
                         </div>
-                        
+
                         <div className="flex items-center gap-3 mb-6">
                             <div className="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center border border-green-200">
                                 <svg className="w-5 h-5 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -54,13 +54,13 @@ function Success({
                         <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
                             Thank you for your support!
                         </h1>
-                        
+
                         <div className="text-lg text-slate-600 leading-relaxed mb-8 space-y-4">
                             <p>
                                 {message || "Thank you for your valuable contribution. In India, every step towards accessible education and healthcare creates a ripple effect of progress for generations to come."}
                             </p>
                             <p>
-                                By supporting Satyalok, you are doing more than making a donation—you are giving an underprivileged child the foundation to break the cycle of poverty and build a brighter tomorrow. 
+                                By supporting Satyalok, you are doing more than making a donation—you are giving an underprivileged child the foundation to break the cycle of poverty and build a brighter tomorrow.
                             </p>
                         </div>
 
@@ -72,7 +72,7 @@ function Success({
                                 <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                 Print Receipt
                             </button>
-                            
+
                             <a
                                 href="https://donate.satyalok.in"
                                 className="inline-flex justify-center items-center gap-2 px-6 py-2.5 bg-[#0067b8] border border-transparent rounded text-sm font-semibold text-white hover:bg-[#005da6] transition-colors shadow-sm"
@@ -92,10 +92,10 @@ function Success({
                                     {formattedAmount}
                                 </div>
                             </div>
-                            
+
                             <div className="p-6">
                                 <h3 className="text-sm font-semibold text-slate-900 mb-4 pb-2 border-b border-slate-100">Transaction Details</h3>
-                                
+
                                 <dl className="space-y-4 text-sm">
                                     <div className="grid grid-cols-3 gap-4">
                                         <dt className="text-slate-500 font-medium">Date & Time</dt>
@@ -113,7 +113,7 @@ function Success({
                                         <dt className="text-slate-500 font-medium">Method</dt>
                                         <dd className="col-span-2 text-slate-900 text-right uppercase">{paymentInstrument.type}</dd>
                                     </div>
-                                    
+
                                     {paymentInstrument.type in TransactionNumber && (
                                         <div className="grid grid-cols-3 gap-4">
                                             <dt className="text-slate-500 font-medium">{TransactionNumber[paymentInstrument.type].label}</dt>
@@ -144,9 +144,11 @@ function Success({
                 {/* Header: Organization Details */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
                     <div className="flex flex-col items-center gap-4">
-                        
+
                         <div>
-                            <h2 className="text-2xl font-bold tracking-tight text-slate-900 uppercase">Satyalok</h2>
+                            <h2 className="text-xl font-bold tracking-tight text-slate-900 uppercase">Satyalok
+                                - A New Hope
+                            </h2>
                             <p className="text-xs text-slate-600 mt-1">Empowering through Education & Healthcare</p>
                             <p className="text-xs text-slate-600">Registered Office: Ranchi, Jharkhand, India</p>
                             <p className="text-xs text-slate-600">Email: info@satyalok.in | Web: www.satyalok.in</p>
@@ -209,7 +211,7 @@ function Success({
                             <li>Donations once processed are non-refundable.</li>
                         </ul>
                     </div>
-                   
+
                 </div>
             </div>
         </>
