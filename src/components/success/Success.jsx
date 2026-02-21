@@ -156,11 +156,11 @@ function Success({
             {/* =========================================
                 PRINT UI (Formal Indian NGO Receipt)
                 ========================================= */}
-            <div className="hidden print:block w-full max-w-4xl mx-auto bg-white text-black p-12 font-sans">
+            <div className="hidden print:block w-full max-w-4xl mx-auto bg-white text-black p-2 font-sans">
                 {/* Header: Organization & QR Verification */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
                     <div className="flex flex-col gap-4">
-                        <img src={logo} alt="Satyalok Logo" className="h-16 w-auto" />
+                        <img src={logo} alt="Satyalok Logo" className="h-16 max-w-fit w-auto object-contain object-left" />
                         <div>
                             <h2 className="text-xl font-bold tracking-tight text-slate-900 uppercase">
                                 Satyalok - A New Hope
@@ -177,7 +177,6 @@ function Success({
                         {/* Print QR Code */}
                         <div className="mt-4 p-2 border border-slate-200 rounded bg-white flex flex-col items-center">
                             <QRCodeSVG value={statusUrl} size={80} />
-                            <p className="text-[8px] mt-1 text-slate-500 uppercase tracking-tighter">Verify Authenticity</p>
                         </div>
                     </div>
                 </div>
