@@ -140,10 +140,11 @@ function Success({
                 PRINT UI (Formal Indian NGO Receipt)
                 ========================================= */}
             <div className="hidden print:block w-full max-w-4xl mx-auto bg-white text-black p-12 font-sans">
+                <img src={logo} alt="Satyalok Logo" className="h-16 w-auto" />
                 {/* Header: Organization Details */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
                     <div className="flex flex-col items-center gap-4">
-                        <img src={logo} alt="Satyalok Logo" className="h-16 w-auto" />
+                        
                         <div>
                             <h2 className="text-2xl font-bold tracking-tight text-slate-900 uppercase">Satyalok</h2>
                             <p className="text-xs text-slate-600 mt-1">Empowering through Education & Healthcare</p>
