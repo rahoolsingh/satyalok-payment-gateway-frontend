@@ -149,8 +149,6 @@ function Success({
                             <h2 className="text-xl font-bold tracking-tight text-slate-900 uppercase">Satyalok
                                 - A New Hope
                             </h2>
-                            <p className="text-xs text-slate-600 mt-1">Empowering through Education & Healthcare</p>
-                            <p className="text-xs text-slate-600">Registered Office: Ranchi, Jharkhand, India</p>
                             <p className="text-xs text-slate-600">Email: info@satyalok.in | Web: www.satyalok.in</p>
                         </div>
                     </div>
