@@ -52,7 +52,7 @@ function Success({
                         </div>
 
                         <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-                            Your generosity powers the future.
+                            Thank you for your support!
                         </h1>
                         
                         <div className="text-lg text-slate-600 leading-relaxed mb-8 space-y-4">
@@ -70,14 +70,14 @@ function Success({
                                 className="inline-flex justify-center items-center gap-2 px-6 py-2.5 bg-white border border-slate-300 rounded text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
                             >
                                 <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                Download Official Receipt
+                                Print Receipt
                             </button>
                             
                             <a
                                 href="https://donate.satyalok.in"
                                 className="inline-flex justify-center items-center gap-2 px-6 py-2.5 bg-[#0067b8] border border-transparent rounded text-sm font-semibold text-white hover:bg-[#005da6] transition-colors shadow-sm"
                             >
-                                Extend Your Impact
+                                Make Another Contribution
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                             </a>
                         </div>
@@ -142,7 +142,7 @@ function Success({
             <div className="hidden print:block w-full max-w-4xl mx-auto bg-white text-black p-12 font-sans">
                 {/* Header: Organization Details */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 pb-6 mb-8">
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col items-center gap-4">
                         <img src={logo} alt="Satyalok Logo" className="h-16 w-auto" />
                         <div>
                             <h2 className="text-2xl font-bold tracking-tight text-slate-900 uppercase">Satyalok</h2>
@@ -155,8 +155,6 @@ function Success({
                         <h1 className="text-2xl font-bold text-slate-800 uppercase mb-2">Donation Receipt</h1>
                         <p className="text-sm"><span className="font-semibold text-slate-600">Date: </span>{formatDate(createdAt)}</p>
                         <p className="text-sm"><span className="font-semibold text-slate-600">Receipt No: </span>{merchantTransactionId}</p>
-                        {/* Placeholder for 80G - standard in Indian receipts */}
-                        <p className="text-sm mt-1"><span className="font-semibold text-slate-600">PAN / 80G Reg: </span>Available on request</p>
                     </div>
                 </div>
 
@@ -164,7 +162,7 @@ function Success({
                 <div className="mb-8 text-sm leading-relaxed text-slate-800">
                     <p className="mb-4"><strong>Dear Donor,</strong></p>
                     <p>
-                        We gratefully acknowledge the receipt of your generous contribution. Your support is instrumental in advancing our grassroots initiatives across India. By investing in the fundamental rights of education and healthcare, you are actively participating in the nation-building process.
+                        We gratefully acknowledge the receipt of your generous contribution. Your support is instrumental in advancing our grassroots initiatives. By investing in the fundamental rights of education and healthcare, you are actively participating in the nation-building process.
                     </p>
                 </div>
 
@@ -210,11 +208,7 @@ function Success({
                             <li>Donations once processed are non-refundable.</li>
                         </ul>
                     </div>
-                    <div className="text-center">
-                        <div className="w-48 border-t border-slate-800 mb-2 mx-auto"></div>
-                        <p className="text-sm font-bold text-slate-900">Authorized Signatory</p>
-                        <p className="text-xs text-slate-600">For Satyalok</p>
-                    </div>
+                   
                 </div>
             </div>
         </>
