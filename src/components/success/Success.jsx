@@ -81,7 +81,13 @@ function Success({
           try {
             await navigator.share({
               title: "Contribution Receipt",
-              text: "I just supported Satyalok. Join the movement to provide education for all!",
+              text: `I just contributed towards a brighter future with Satyalok.  
+
+You can also be part of the change. Donate here: https://donate.satyalok.in  
+
+Receipt Status: https://donate.satyalok.in/status/${merchantTransactionId}
+
+#Satyalok #EducationForAll #MakeADifference`,
               files: [file],
             });
           } catch (err) {
