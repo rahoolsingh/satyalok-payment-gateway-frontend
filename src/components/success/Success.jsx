@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
-import { Share2, Download, CheckCircle2 } from "lucide-react"; 
+import { Share2, Download, CheckCircle2 } from "lucide-react";
 import logo from "../../assets/logo.png";
 
 function Success({
@@ -10,7 +10,7 @@ function Success({
   merchantTransactionId,
   transactionId,
   paymentInstrument,
-  message, // Kept in props in case you need it elsewhere, but omitted from the hard receipt
+  message,
   createdAt,
 }) {
   const receiptRef = useRef(null);
@@ -35,15 +35,10 @@ function Success({
     }).format(isoString ? new Date(isoString) : new Date());
   };
 
-  const TransactionDetails = {
-    UPI: { label: "UPI UTR", field: "utr" },
-    CARD: { label: "Card Type", field: "cardType" },
-  };
-
   const captureReceipt = async () => {
     if (!receiptRef.current) return null;
     return await html2canvas(receiptRef.current, {
-      scale: 3, 
+      scale: 3, // High resolution for crisp text
       backgroundColor: "#ffffff",
       useCORS: true,
       logging: false,
@@ -82,7 +77,7 @@ function Success({
           try {
             await navigator.share({
               title: "Contribution Receipt",
-              text: "Transaction receipt for my contribution to Satyalok.",
+              text: "Transaction receipt for my contribution.",
               files: [file],
             });
           } catch (err) {
@@ -97,13 +92,21 @@ function Success({
     }
   };
 
+  const TransactionDetails = {
+    UPI: { label: "UPI UTR", field: "utr" },
+    CARD: { label: "Card Type", field: "cardType" },
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 flex flex-col items-center font-sans">
+    <div className="min-h-screen bg-gray-100 py-8 px-4 sm:py-12 flex flex-col items-center font-sans">
       
-      {/* Container */}
-      <div className="relative w-full max-w-md">
+      {/* Container locked to max-w-lg. 
+        This ensures it looks like a clean, constrained receipt card on desktop, 
+        but fluidly fills the screen on mobile. 
+      */}
+      <div className="relative w-full max-w-lg">
         
-        {/* ACTION BUTTONS - Ignored by html2canvas */}
+        {/* Action Bar - Excluded from Image Capture */}
         <div 
           data-html2canvas-ignore="true" 
           className="flex justify-end gap-3 mb-4"
@@ -111,7 +114,7 @@ function Success({
           <button
             onClick={handleDownload}
             disabled={isProcessing}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
           >
             <Download size={16} /> 
             {isProcessing ? "Processing..." : "Download"}
@@ -131,89 +134,96 @@ function Success({
           ref={receiptRef}
           className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
         >
-          {/* Header */}
-          <div className="p-8 border-b border-gray-100">
-            <div className="flex justify-between items-start mb-8">
-              <img src={logo} alt="Satyalok" className="h-7" />
-              <span className="text-xs font-semibold tracking-widest text-gray-400 uppercase">
-                Receipt
-              </span>
+          {/* Top Section */}
+          <div className="p-6 sm:p-8">
+            <div className="flex justify-between items-center mb-8">
+              <img src={logo} alt="Satyalok" className="h-6 sm:h-8" />
+              <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                <CheckCircle2 size={14} />
+                Success
+              </div>
             </div>
 
-            <div className="text-center">
-              <p className="text-sm text-gray-500 mb-2">Amount Paid</p>
-              <h1 className="text-4xl font-light text-gray-900 tracking-tight mb-3">
+            <div className="text-center mb-2">
+              <p className="text-sm font-medium text-gray-500 mb-1">Amount Paid</p>
+              <h1 className="text-4xl sm:text-5xl font-light text-gray-900 tracking-tight">
                 {formattedAmount}
               </h1>
-              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-medium">
-                <CheckCircle2 size={14} />
-                Transaction Successful
-              </div>
             </div>
           </div>
 
-          {/* Details */}
-          <div className="p-8">
-            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-5">
-              Transaction Details
-            </h3>
-            
-            <dl className="space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <dt className="text-gray-500">Date & Time</dt>
-                <dd className="font-medium text-gray-900">{formatDate(createdAt)}</dd>
+          {/* Dashed Separator */}
+          <div className="relative flex items-center justify-center px-6">
+            <div className="absolute left-0 w-3 h-6 bg-gray-100 rounded-r-full border-y border-r border-gray-200"></div>
+            <div className="w-full border-t-2 border-dashed border-gray-200"></div>
+            <div className="absolute right-0 w-3 h-6 bg-gray-100 rounded-l-full border-y border-l border-gray-200"></div>
+          </div>
+
+          {/* Details Section */}
+          <div className="p-6 sm:p-8">
+            <div className="grid grid-cols-2 gap-4">
+              
+              {/* Short Data: Horizontal Split */}
+              <div className="col-span-1 flex flex-col">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Date</span>
+                <span className="text-sm font-medium text-gray-900">{formatDate(createdAt)}</span>
               </div>
               
-              <div className="flex justify-between items-center text-sm">
-                <dt className="text-gray-500">Receipt Number</dt>
-                <dd className="font-mono text-gray-900">{merchantTransactionId}</dd>
-              </div>
-              
-              <div className="flex justify-between items-center text-sm">
-                <dt className="text-gray-500">Transaction ID</dt>
-                <dd className="font-mono text-gray-900">{transactionId}</dd>
-              </div>
-              
-              <div className="flex justify-between items-center text-sm">
-                <dt className="text-gray-500">Payment Method</dt>
-                <dd className="font-medium text-gray-900 uppercase">{paymentInstrument.type}</dd>
+              <div className="col-span-1 flex flex-col items-end text-right">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Method</span>
+                <span className="text-sm font-medium text-gray-900 uppercase">{paymentInstrument.type}</span>
               </div>
 
-              {paymentInstrument.type in TransactionDetails && (
-                <div className="flex justify-between items-center text-sm">
-                  <dt className="text-gray-500">
+              {/* Long Data: Vertical Stack with Break-All */}
+              <div className="col-span-2 bg-gray-50 rounded-lg p-3 sm:p-4 mt-2">
+                <span className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Transaction ID</span>
+                <span className="block text-sm sm:text-base font-mono text-gray-900 break-all leading-tight">
+                  {transactionId}
+                </span>
+              </div>
+
+              <div className="col-span-2 bg-gray-50 rounded-lg p-3 sm:p-4">
+                <span className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Receipt Number</span>
+                <span className="block text-sm font-mono text-gray-900 break-all leading-tight">
+                  {merchantTransactionId}
+                </span>
+              </div>
+
+              {paymentInstrument.type in TransactionDetails && paymentInstrument[TransactionDetails[paymentInstrument.type]?.field] && (
+                <div className="col-span-2 bg-gray-50 rounded-lg p-3 sm:p-4">
+                  <span className="block text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">
                     {TransactionDetails[paymentInstrument.type].label}
-                  </dt>
-                  <dd className="font-mono text-gray-900">
-                    {paymentInstrument[TransactionDetails[paymentInstrument.type]?.field]?.replace("_", " ")}
-                  </dd>
+                  </span>
+                  <span className="block text-sm font-mono text-gray-900 break-all leading-tight">
+                    {paymentInstrument[TransactionDetails[paymentInstrument.type].field].replace("_", " ")}
+                  </span>
                 </div>
               )}
-            </dl>
+              
+            </div>
           </div>
 
           {/* Footer & QR */}
-          <div className="bg-gray-50 p-6 border-t border-gray-100 flex items-center justify-between gap-4">
+          <div className="bg-gray-50 px-6 py-5 sm:px-8 border-t border-gray-100 flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-900">Satyalok</p>
-              <p className="text-xs text-gray-500 mt-1">
-                Scan QR code to verify this receipt online.
+              <p className="text-sm font-semibold text-gray-900">Satyalok</p>
+              <p className="text-xs text-gray-500 mt-0.5 max-w-[200px] leading-relaxed">
+                Scan QR to verify transaction authenticity.
               </p>
             </div>
-            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm shrink-0">
-              <QRCodeSVG value={statusUrl} size={48} level="L" />
+            <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm shrink-0">
+              <QRCodeSVG value={statusUrl} size={56} level="L" />
             </div>
           </div>
         </div>
-
       </div>
 
-      <div data-html2canvas-ignore="true" className="mt-8">
+      <div data-html2canvas-ignore="true" className="mt-8 mb-4">
         <a
           href="https://donate.satyalok.in"
           className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
         >
-          Return to Dashboard
+          Return Home
         </a>
       </div>
     </div>
