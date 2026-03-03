@@ -78,23 +78,15 @@ Receipt Status: ${statusUrl}
 #Satyalok #EducationForAll #HoliHai`,
               files: [file],
             });
-          } catch (shareError) {
-            if (shareError.name !== "AbortError") {
-              downloadImage(canvas);
-            }
+          } catch (err) {
+            if (err.name !== "AbortError") downloadImage(canvas);
           }
         } else {
           downloadImage(canvas);
-          alert(
-            "Sharing is not supported on this browser/device. The receipt image has been downloaded instead."
-          );
         }
         setIsSharing(false);
       }, "image/png");
-    } catch (error) {
-      alert(
-        "An error occurred while trying to create the receipt screenshot."
-      );
+    } catch (err) {
       setIsSharing(false);
     }
   };
@@ -108,185 +100,144 @@ Receipt Status: ${statusUrl}
 
   return (
     <>
-      <div className="w-full bg-slate-100 min-h-[85vh] flex items-center py-16 px-6 font-sans text-slate-900 print:hidden">
-        <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+      <div className="w-full bg-slate-50 min-h-screen py-8 px-4 print:hidden">
 
-          {/* Left Section */}
-          <div className="lg:col-span-7 flex flex-col justify-center">
+        {/* Receipt First - Especially on Mobile */}
+        <div className="max-w-md lg:max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
 
-            {/* Professional Header */}
-            <div className="relative rounded-xl shadow-lg mb-12 p-10 bg-gradient-to-br from-indigo-700 via-purple-700 to-pink-600 text-white">
-              <div className="relative z-10">
-                <div className="mb-8 hidden lg:block">
-                  <img
-                    src={logo}
-                    alt="Satyalok"
-                    className="h-14 w-auto object-contain brightness-0 invert"
-                  />
-                </div>
+          {/* RECEIPT SECTION */}
+          <div
+            ref={receiptRef}
+            className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
+          >
 
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 bg-white/20 rounded-md flex items-center justify-center border border-white/40">
-                    <svg
-                      className="w-5 h-5 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="3"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="text-sm font-semibold uppercase tracking-wider">
-                    Payment Successful
-                  </h2>
-                </div>
+            {/* Subtle Holi Accent Strip */}
+            <div className="h-2 bg-gradient-to-r from-pink-300 via-purple-300 to-yellow-300"></div>
 
-                <h1 className="text-3xl lg:text-4xl font-bold leading-tight">
-                  Colors of Kindness!
-                </h1>
-                <p className="text-lg text-pink-100 mt-2">
-                  Thank you for spreading joy this Holi.
-                </p>
+            {/* Amount Section */}
+            <div className="px-6 pt-8 pb-6 text-center border-b border-slate-200">
+              <p className="text-xs uppercase tracking-widest text-slate-500 font-medium mb-2">
+                Total Contribution
+              </p>
+              <h2 className="text-3xl font-semibold text-slate-900">
+                {formattedAmount}
+              </h2>
+            </div>
+
+            {/* QR */}
+            <div className="flex justify-center py-6 border-b border-slate-100">
+              <div className="p-3 bg-white border border-slate-200 rounded-xl">
+                <QRCodeSVG value={statusUrl} size={90} level="H" />
               </div>
             </div>
 
-            <div className="text-lg text-slate-600 leading-relaxed mb-12 space-y-4">
-              <p>
+            {/* Details */}
+            <div className="px-6 py-8">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-base font-semibold text-slate-800">
+                  Transaction Details
+                </h3>
+                <img
+                  src={logo}
+                  alt="Satyalok"
+                  className="h-5 opacity-50 grayscale"
+                />
+              </div>
+
+              <dl className="space-y-5 text-sm">
+
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Date & Time</dt>
+                  <dd className="font-medium text-right">
+                    {formatDate(createdAt)}
+                  </dd>
+                </div>
+
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Receipt No.</dt>
+                  <dd className="font-mono text-right break-all">
+                    {merchantTransactionId}
+                  </dd>
+                </div>
+
+                <div className="flex justify-between">
+                  <dt className="text-slate-500">Transaction ID</dt>
+                  <dd className="font-mono text-right break-all">
+                    {transactionId}
+                  </dd>
+                </div>
+
+                <div className="flex justify-between items-center">
+                  <dt className="text-slate-500">Method</dt>
+                  <dd className="uppercase bg-slate-100 px-3 py-1 rounded-md text-xs font-semibold">
+                    {paymentInstrument.type}
+                  </dd>
+                </div>
+
+                {paymentInstrument.type in TransactionNumber && (
+                  <div className="flex justify-between">
+                    <dt className="text-slate-500">
+                      {TransactionNumber[paymentInstrument.type].label}
+                    </dt>
+                    <dd className="font-mono text-xs text-right break-all">
+                      {paymentInstrument[
+                        TransactionNumber[paymentInstrument.type]?.field
+                      ]?.replace("_", " ")}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            <div className="bg-slate-50 text-center py-4 border-t border-slate-200">
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-medium">
+                Scan QR to verify status
+              </p>
+              <p className="text-xs text-slate-600">
+                Satyalok - A New Hope
+              </p>
+            </div>
+          </div>
+
+          {/* SIDE CONTENT */}
+          <div className="lg:col-span-7 flex flex-col justify-center space-y-6">
+
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900 mb-2">
+                Colors of Kindness!
+              </h1>
+              <p className="text-slate-600 leading-relaxed">
                 {message ||
                   "Thank you for your valuable contribution. Just as Holi brings people together in a celebration of colors, your generosity brings hope and vibrancy to lives that need it most."}
               </p>
-              <p>
+              <p className="text-slate-600 leading-relaxed mt-3">
                 By supporting Satyalok, you are helping paint a brighter, more colorful future for underprivileged children.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-4 pt-6 border-t border-slate-300">
+            <div className="flex flex-wrap gap-4 pt-6 border-t border-slate-200">
 
               <button
                 onClick={handleShare}
                 disabled={isSharing}
-                className={`inline-flex items-center gap-2 px-6 py-3 bg-slate-900 text-white rounded-md text-sm font-semibold hover:bg-black transition ${
-                  isSharing ? "opacity-70 cursor-wait" : ""
-                }`}
+                className="px-6 py-3 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-black transition"
               >
                 {isSharing ? "Preparing..." : "Share Receipt"}
               </button>
 
               <button
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white border border-slate-300 rounded-md text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
+                className="px-6 py-3 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
               >
                 Print
               </button>
 
               <a
                 href="https://donate.satyalok.in"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-800 text-white rounded-md text-sm font-semibold hover:bg-slate-900 transition"
+                className="px-6 py-3 bg-slate-800 text-white rounded-lg text-sm font-semibold hover:bg-slate-900 transition"
               >
                 Contribute Again
               </a>
-            </div>
-          </div>
-
-          {/* Receipt Card */}
-          <div
-            className="lg:col-span-5 w-full"
-            ref={receiptRef}
-          >
-            <div className="bg-white border border-slate-300 shadow-lg rounded-xl overflow-hidden">
-
-              <div className="bg-slate-50 p-6 border-b border-slate-300 flex justify-between items-center">
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
-                    Total Contribution
-                  </p>
-                  <div className="text-3xl font-bold text-slate-900">
-                    {formattedAmount}
-                  </div>
-                </div>
-
-                <div className="bg-white p-3 border border-slate-300 rounded-lg">
-                  <QRCodeSVG value={statusUrl} size={72} level="H" />
-                </div>
-              </div>
-
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    Transaction Details
-                  </h3>
-                  <img
-                    src={logo}
-                    alt="Satyalok"
-                    className="h-6 w-auto opacity-60 grayscale"
-                  />
-                </div>
-
-                <dl className="space-y-4 text-sm">
-                  <div className="grid grid-cols-3 gap-4">
-                    <dt className="text-slate-500 font-medium">
-                      Date & Time
-                    </dt>
-                    <dd className="col-span-2 text-right font-medium">
-                      {formatDate(createdAt)}
-                    </dd>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <dt className="text-slate-500 font-medium">
-                      Receipt No.
-                    </dt>
-                    <dd className="col-span-2 text-right font-mono break-all">
-                      {merchantTransactionId}
-                    </dd>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <dt className="text-slate-500 font-medium">
-                      Transaction ID
-                    </dt>
-                    <dd className="col-span-2 text-right font-mono break-all">
-                      {transactionId}
-                    </dd>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <dt className="text-slate-500 font-medium">
-                      Method
-                    </dt>
-                    <dd className="col-span-2 text-right uppercase bg-slate-200 text-slate-700 py-1 px-3 rounded-md text-xs font-semibold inline-block justify-self-end">
-                      {paymentInstrument.type}
-                    </dd>
-                  </div>
-
-                  {paymentInstrument.type in TransactionNumber && (
-                    <div className="grid grid-cols-3 gap-4">
-                      <dt className="text-slate-500 font-medium">
-                        {TransactionNumber[paymentInstrument.type].label}
-                      </dt>
-                      <dd className="col-span-2 text-right font-mono text-xs break-all">
-                        {paymentInstrument[
-                          TransactionNumber[paymentInstrument.type]?.field
-                        ]?.replace("_", " ")}
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-
-              <div className="bg-slate-50 p-5 border-t border-slate-300 text-center">
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1 font-semibold">
-                  Scan QR to verify status
-                </p>
-                <p className="text-xs text-slate-600 font-medium">
-                  Satyalok - A New Hope
-                </p>
-              </div>
             </div>
           </div>
 
