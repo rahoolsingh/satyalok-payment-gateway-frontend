@@ -102,13 +102,11 @@ function Success({
   };
 
   return (
-    // Main Wrapper - No background color as requested
     <div className="min-h-screen py-10 px-4 sm:py-16 font-sans w-full">
       
-      {/* 2-Column Grid on lg (Desktop), Stacked on Mobile (Flex col) */}
       <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 lg:gap-20 items-center lg:items-start">
         
-        {/* LEFT COLUMN: Impact, Messaging & Action Buttons */}
+        {/* LEFT COLUMN: Impact & Actions */}
         <div className="w-full lg:w-1/2 flex flex-col order-1">
           
           <div className="mb-8 text-center lg:text-left">
@@ -143,32 +141,37 @@ function Success({
           </div>
 
           {/* ACTION BUTTONS */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={handleDownload}
-              disabled={isProcessing}
-              className="flex-1 flex justify-center items-center gap-2 px-6 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
-            >
-              <Download size={18} /> 
-              {isProcessing ? "Processing..." : "Download Receipt"}
-            </button>
-            <button
-              onClick={handleShare}
-              disabled={isProcessing}
-              className="flex-1 flex justify-center items-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-black transition-colors shadow-sm disabled:opacity-50"
-            >
-              <Share2 size={18} /> 
-              Share Receipt
-            </button>
-          </div>
+          <div className="flex flex-col gap-4">
+            
+            {/* Primary Receipt Actions */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={handleDownload}
+                disabled={isProcessing}
+                className="flex-1 flex justify-center items-center gap-2 px-6 py-3.5 bg-white border border-gray-300 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors shadow-sm disabled:opacity-50"
+              >
+                <Download size={18} /> 
+                {isProcessing ? "Processing..." : "Download Receipt"}
+              </button>
+              <button
+                onClick={handleShare}
+                disabled={isProcessing}
+                className="flex-1 flex justify-center items-center gap-2 px-6 py-3.5 bg-gray-900 text-white rounded-xl text-sm font-semibold hover:bg-black transition-colors shadow-sm disabled:opacity-50"
+              >
+                <Share2 size={18} /> 
+                Share Receipt
+              </button>
+            </div>
 
-          <div className="mt-8 text-center lg:text-left">
+            {/* Contribute Again Button */}
             <a
               href="https://donate.satyalok.in"
-              className="inline-block text-sm font-medium text-gray-400 hover:text-gray-900 transition-colors"
+              className="flex justify-center items-center gap-2 w-full px-6 py-3.5 bg-emerald-100/50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors shadow-sm"
             >
-              ← Return to Home
+              <Heart size={16} className="text-emerald-600" />
+              Make Another Contribution
             </a>
+
           </div>
 
         </div>
