@@ -70,6 +70,7 @@ function Payment() {
 
     const [errors, setErrors] = useState({});
     const [taxExemption, setTaxExemption] = useState(false);
+    const [show80GInfo, setShow80GInfo] = useState(false); // New state for Info toggle
     const [errorMessage, setErrorMessage] = useState("");
     const [serverStatus, setServerStatus] = useState("checking");
     const [serverVersion, setServerVersion] = useState("");
@@ -105,15 +106,15 @@ function Payment() {
 
         const interval = setInterval(() => {
             setFactIndex((prev) => (prev + 1) % impactFacts.length);
-        }, 5000); // Rotates every 5 seconds
+        }, 5000);
 
         return () => clearInterval(interval);
     }, []);
 
     const fieldsConfig = [
-        { label: "Full Name", name: "name", type: "text", placeholder: "e.g. Rahul Singh", icon: User, validation: (v) => !v.trim() && "Name is required" },
+        { label: "Full Name", name: "name", type: "text", placeholder: "e.g. Rohan Kumar", icon: User, validation: (v) => !v.trim() && "Name is required" },
         { label: "Email Address", name: "email", type: "email", placeholder: "you@example.com", icon: Mail, validation: (v) => (!v ? "Email is required" : !/\S+@\S+\.\S+/.test(v) ? "Invalid email format" : null) },
-        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "9876543210", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
+        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "XXXXXXXXXX", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
     ];
 
     const predefinedAmounts = [500, 1000, 2100, 5100];
@@ -166,25 +167,17 @@ function Payment() {
     if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loading /></div>;
 
     return (
-        // Added lg:h-screen to lock the overall window height on desktop
         <div className="flex min-h-screen lg:h-screen w-full flex-col overflow-x-hidden bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
             <Header />
 
-            {/* Split Screen Container: 
-                On desktop (lg), it locks to exactly 100vh minus the 80px header, and hides main overflow. 
-            */}
             <div className="flex flex-grow flex-col lg:flex-row lg:h-[calc(100vh-80px)] lg:overflow-hidden relative">
                 
-                {/* LEFT SECTION: 
-                    Now naturally fills the exact height of the screen and never moves.
-                */}
+                {/* LEFT SECTION */}
                 <div className="relative order-1 h-72 lg:h-full lg:w-5/12 xl:w-1/2 overflow-hidden bg-slate-900 flex-shrink-0">
                     <img src={bgImage} alt="Donate Background" className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-overlay transition-transform duration-[20s] hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent lg:bg-gradient-to-r lg:from-slate-900 lg:via-slate-900/80 lg:to-transparent" />
 
                     <div className="absolute inset-0 flex flex-col justify-between p-8 lg:p-12 xl:p-16 z-10">
-                        
-                        {/* Top Content */}
                         <div>
                             <img src={logo} alt="Satyalok" className="mb-8 w-32 opacity-90 lg:w-40" />
                             <h1 className="mb-4 text-3xl font-bold leading-tight text-white lg:text-5xl">
@@ -195,7 +188,7 @@ function Payment() {
                             </p>
                         </div>
 
-                        {/* Bottom Content: Dynamic Impact Matrix (Desktop Only) */}
+                        {/* Dynamic Impact Matrix */}
                         <div className="hidden lg:block w-full max-w-md">
                             <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 relative min-h-[140px] overflow-hidden shadow-2xl">
                                 {impactFacts.map((fact, idx) => (
@@ -216,7 +209,6 @@ function Payment() {
                                 ))}
                             </div>
                             
-                            {/* Carousel Indicators */}
                             <div className="flex gap-2 mt-5 px-2">
                                 {impactFacts.map((_, idx) => (
                                     <div 
@@ -230,9 +222,7 @@ function Payment() {
                     </div>
                 </div>
 
-                {/* RIGHT SECTION: 
-                    lg:overflow-y-auto gives this specific div its own scrollbar. The main window will not scroll! 
-                */}
+                {/* RIGHT SECTION */}
                 <div className="order-2 flex w-full flex-col bg-white lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto">
                     <div className="mx-auto w-full max-w-2xl flex-grow px-6 py-10 lg:px-12 lg:py-16">
 
@@ -258,7 +248,6 @@ function Payment() {
                                     <p className="text-sm text-slate-500 mb-4 ml-8">Select an amount or enter any custom amount.</p>
                                 </div>
                                 
-                                {/* Distinct Quick-Select Buttons */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {predefinedAmounts.map((amt) => (
                                         <button
@@ -279,7 +268,6 @@ function Payment() {
                                     ))}
                                 </div>
 
-                                {/* Custom Amount Input */}
                                 <div className="relative flex items-center mt-2">
                                     <span className="absolute left-4 text-slate-400 font-medium text-lg">₹</span>
                                     <input
@@ -344,11 +332,32 @@ function Payment() {
                                 <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 transition-all hover:border-slate-300">
                                     <div className="flex items-center justify-between cursor-pointer" onClick={() => setTaxExemption(!taxExemption)}>
                                         <div>
-                                            <p className="text-sm font-bold text-slate-900">Claim 80G Tax Exemption?</p>
+                                            <div className="flex items-center gap-1.5">
+                                                <p className="text-sm font-bold text-slate-900">Claim 80G Tax Exemption?</p>
+                                                {/* Info Button - Stops propagation so it doesn't trigger the toggle */}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setShow80GInfo(!show80GInfo);
+                                                    }}
+                                                    className={`p-1 rounded-full transition-colors ${show80GInfo ? 'text-blue-600 bg-blue-100' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                                    title="What is 80G?"
+                                                >
+                                                    <Info size={16} />
+                                                </button>
+                                            </div>
                                             <p className="text-xs text-slate-500 mt-0.5">Generate a certificate to save on income tax.</p>
                                         </div>
                                         <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${taxExemption ? 'bg-blue-600' : 'bg-slate-300'}`}>
                                             <div className={`w-4 h-4 rounded-full bg-white absolute transition-transform duration-300 shadow-sm ${taxExemption ? 'translate-x-7' : 'translate-x-1'}`} />
+                                        </div>
+                                    </div>
+
+                                    {/* Collapsible Info Box */}
+                                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${show80GInfo ? 'max-h-32 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                                        <div className="bg-blue-50/80 border border-blue-100 p-3 rounded-xl text-xs text-blue-800 leading-relaxed shadow-sm">
+                                            <strong>Section 80G</strong> allows you to claim tax deductions on donations made to approved charitable organizations like Satyalok. A tax receipt will be generated automatically after successful payment.
                                         </div>
                                     </div>
 
