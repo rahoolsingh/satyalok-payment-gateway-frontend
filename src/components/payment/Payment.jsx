@@ -83,9 +83,7 @@ function Payment() {
 
     // Dynamic Facts for the Left Panel
     const impactFacts = [
-        { title: "Direct Impact", desc: "100% of your contribution goes directly to on-ground educational programs." },
-        { title: "Education Matters", desc: "One extra year of schooling increases a child's future earnings by up to 10%." },
-        { title: "Empowering Lives", desc: "Over 2,000 students have gained access to quality education through Satyalok." },
+        { title: "Empowering Lives", desc: "500+ students have gained access to quality education through Satyalok." },
         { title: "Tax Benefits", desc: "Your generous donations are eligible for 80G tax exemptions." }
     ];
 
