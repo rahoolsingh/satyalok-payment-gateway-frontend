@@ -70,7 +70,13 @@ function Success({
                     try {
                         await navigator.share({
                             title: 'My Contribution to Satyalok',
-                            text: `I just contributed towards a brighter future with Satyalok. Receipt Status: ${statusUrl} #Satyalok #EducationForAll #HoliHai`,
+                            text: `I just contributed towards a brighter future with Satyalok.  
+
+You can also be part of the change. Donate here: https://donate.satyalok.in  
+
+Receipt Status: ${statusUrl}
+
+#Satyalok #EducationForAll #HoliHai`,
                             files: [file],
                         });
                     } catch (shareError) {
