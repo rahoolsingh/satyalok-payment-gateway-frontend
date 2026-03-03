@@ -97,9 +97,9 @@ function Payment() {
     }, []);
 
     const fieldsConfig = [
-        { label: "Full Name", name: "name", type: "text", placeholder: "e.g. Rahul Singh", icon: User, validation: (v) => !v.trim() && "Name is required" },
+        { label: "Full Name", name: "name", type: "text", placeholder: "e.g. Rohan Kumar", icon: User, validation: (v) => !v.trim() && "Name is required" },
         { label: "Email Address", name: "email", type: "email", placeholder: "you@example.com", icon: Mail, validation: (v) => (!v ? "Email is required" : !/\S+@\S+\.\S+/.test(v) ? "Invalid email format" : null) },
-        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "9876543210", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
+        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "XXXXXXXXXX", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
     ];
 
     const predefinedAmounts = [500, 1000, 2100, 5100];
