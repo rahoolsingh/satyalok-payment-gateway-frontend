@@ -25,7 +25,7 @@ import Maintainance from "../maintainance/Maintainance";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
-// Refined, Modern Input Field (Familiar but cleaner)
+// Refined, Modern Input Field
 const InputField = ({ label, name, type, placeholder, value, onChange, error, icon: Icon }) => (
     <div className="space-y-1.5 w-full">
         <label className="text-sm font-semibold text-slate-700">
@@ -99,7 +99,7 @@ function Payment() {
     const fieldsConfig = [
         { label: "Full Name", name: "name", type: "text", placeholder: "e.g. Rohan Kumar", icon: User, validation: (v) => !v.trim() && "Name is required" },
         { label: "Email Address", name: "email", type: "email", placeholder: "you@example.com", icon: Mail, validation: (v) => (!v ? "Email is required" : !/\S+@\S+\.\S+/.test(v) ? "Invalid email format" : null) },
-        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "XXXXXXXXXX", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
+        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "XXXXXXXXX", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
     ];
 
     const predefinedAmounts = [500, 1000, 2100, 5100];
@@ -154,7 +154,6 @@ function Payment() {
         <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
             <Header />
 
-            {/* Restored Split Screen Layout */}
             <div className="flex flex-grow flex-col lg:flex-row">
                 
                 {/* Left Section: Hero Image */}
@@ -189,47 +188,17 @@ function Payment() {
                                 </span>
                                 Make a Donation
                             </h2>
-                            <p className="mt-2 text-sm text-slate-500">Please enter your details and select your contribution amount below.</p>
+                            <p className="mt-2 text-sm text-slate-500">Fill in your details below to securely complete your contribution.</p>
                         </div>
 
-                        <form className="space-y-8">
+                        <form className="space-y-10">
                             
-                            {/* 80G Toggle (Professional Switch) */}
-                            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 transition-all hover:border-slate-300">
-                                <div className="flex items-center justify-between cursor-pointer" onClick={() => setTaxExemption(!taxExemption)}>
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900">Claim 80G Tax Exemption?</p>
-                                        <p className="text-xs text-slate-500 mt-0.5">Avail tax benefits on this donation.</p>
-                                    </div>
-                                    <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${taxExemption ? 'bg-blue-600' : 'bg-slate-300'}`}>
-                                        <div className={`w-4 h-4 rounded-full bg-white absolute transition-transform duration-300 ${taxExemption ? 'translate-x-7' : 'translate-x-1'}`} />
-                                    </div>
-                                </div>
-
-                                {/* PAN Input (Slides down) */}
-                                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${taxExemption ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-                                    <InputField
-                                        label="PAN Number"
-                                        name="pan"
-                                        type="text"
-                                        placeholder="ABCDE1234F"
-                                        value={formData.pan}
-                                        onChange={(e) => {
-                                            setFormData({ ...formData, pan: e.target.value.toUpperCase() });
-                                            if (errors.pan) setErrors({ ...errors, pan: null });
-                                        }}
-                                        error={errors.pan}
-                                        icon={CreditCard}
-                                    />
-                                    <div className="mt-2 flex items-start gap-2 rounded bg-blue-50/50 p-2 text-xs text-blue-700">
-                                        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                        <span>Valid PAN is mandatory for 80G tax exemption certificate generation.</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Standard Fields */}
+                            {/* SECTION 1: Personal Details */}
                             <div className="space-y-5">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">1</span>
+                                    <h3 className="text-base font-bold text-slate-900">Your Details</h3>
+                                </div>
                                 <InputField {...fieldsConfig[0]} value={formData.name} onChange={handleChange} error={errors.name} />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <InputField {...fieldsConfig[1]} value={formData.email} onChange={handleChange} error={errors.email} />
@@ -239,11 +208,14 @@ function Payment() {
 
                             <div className="h-px w-full bg-slate-100"></div>
 
-                            {/* Amount Section (Foolproof Input + Shortcuts) */}
-                            <div className="space-y-4">
+                            {/* SECTION 2: Amount Section */}
+                            <div className="space-y-5">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">2</span>
+                                    <h3 className="text-base font-bold text-slate-900">Contribution Amount</h3>
+                                </div>
+                                
                                 <div>
-                                    <label className="block text-sm font-bold text-slate-900 mb-2">Donation Amount (INR)</label>
-                                    {/* Always Visible Input */}
                                     <div className="relative flex items-center">
                                         <span className="absolute left-4 text-slate-400 font-medium text-lg">₹</span>
                                         <input
@@ -262,7 +234,7 @@ function Payment() {
                                     {errors.amount && <p className="text-xs font-medium text-red-600 mt-1.5">{errors.amount}</p>}
                                 </div>
 
-                                {/* Shortcut Buttons update the input above */}
+                                {/* Shortcut Buttons */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {predefinedAmounts.map((amt) => (
                                         <button
@@ -318,8 +290,51 @@ function Payment() {
                                 </div>
                             </div>
 
+                            <div className="h-px w-full bg-slate-100"></div>
+
+                            {/* SECTION 3: Tax Exemption (Optional Add-on) */}
+                            <div className="space-y-5">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">3</span>
+                                    <h3 className="text-base font-bold text-slate-900">Tax Benefits (Optional)</h3>
+                                </div>
+                                
+                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 transition-all hover:border-slate-300">
+                                    <div className="flex items-center justify-between cursor-pointer" onClick={() => setTaxExemption(!taxExemption)}>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-900">Claim 80G Tax Exemption?</p>
+                                            <p className="text-xs text-slate-500 mt-0.5">Generate a certificate for this donation.</p>
+                                        </div>
+                                        <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${taxExemption ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                                            <div className={`w-4 h-4 rounded-full bg-white absolute transition-transform duration-300 ${taxExemption ? 'translate-x-7' : 'translate-x-1'}`} />
+                                        </div>
+                                    </div>
+
+                                    {/* PAN Input */}
+                                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${taxExemption ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                                        <InputField
+                                            label="PAN Number"
+                                            name="pan"
+                                            type="text"
+                                            placeholder="ABCDE1234F"
+                                            value={formData.pan}
+                                            onChange={(e) => {
+                                                setFormData({ ...formData, pan: e.target.value.toUpperCase() });
+                                                if (errors.pan) setErrors({ ...errors, pan: null });
+                                            }}
+                                            error={errors.pan}
+                                            icon={CreditCard}
+                                        />
+                                        <div className="mt-2 flex items-start gap-2 rounded bg-blue-50/50 p-2 text-xs text-blue-700">
+                                            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                            <span>Valid PAN is mandatory for 80G tax exemption certificate generation.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Submit Action */}
-                            <div className="pt-6">
+                            <div className="pt-4">
                                 <button
                                     type="button"
                                     disabled={loading}
