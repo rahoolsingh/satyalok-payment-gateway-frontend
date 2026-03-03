@@ -113,9 +113,9 @@ function Payment() {
     }, []);
 
     const fieldsConfig = [
-        { label: "Full Name", name: "name", type: "text", placeholder: "e.g. Rohan Kumar", icon: User, validation: (v) => !v.trim() && "Name is required" },
+        { label: "Full Name", name: "name", type: "text", placeholder: "e.g. Rahul Singh", icon: User, validation: (v) => !v.trim() && "Name is required" },
         { label: "Email Address", name: "email", type: "email", placeholder: "you@example.com", icon: Mail, validation: (v) => (!v ? "Email is required" : !/\S+@\S+\.\S+/.test(v) ? "Invalid email format" : null) },
-        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "XXXXXXXXXX", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
+        { label: "Mobile Number", name: "phone", type: "tel", placeholder: "9876543210", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
     ];
 
     const predefinedAmounts = [500, 1000, 2100, 5100];
@@ -168,15 +168,19 @@ function Payment() {
     if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loading /></div>;
 
     return (
-        <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
+        // Added lg:h-screen to lock the overall window height on desktop
+        <div className="flex min-h-screen lg:h-screen w-full flex-col overflow-x-hidden bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
             <Header />
 
-            <div className="flex flex-grow flex-col lg:flex-row relative">
+            {/* Split Screen Container: 
+                On desktop (lg), it locks to exactly 100vh minus the 80px header, and hides main overflow. 
+            */}
+            <div className="flex flex-grow flex-col lg:flex-row lg:h-[calc(100vh-80px)] lg:overflow-hidden relative">
                 
-                {/* LEFT SECTION: Hero Image & Dynamic Facts
-                  Made sticky on desktop (lg) so it stays put while the right side scrolls.
+                {/* LEFT SECTION: 
+                    Now naturally fills the exact height of the screen and never moves.
                 */}
-                <div className="relative order-1 h-72 lg:h-screen lg:sticky lg:top-0 lg:w-5/12 xl:w-1/2 overflow-hidden bg-slate-900 flex-shrink-0">
+                <div className="relative order-1 h-72 lg:h-full lg:w-5/12 xl:w-1/2 overflow-hidden bg-slate-900 flex-shrink-0">
                     <img src={bgImage} alt="Donate Background" className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-overlay transition-transform duration-[20s] hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent lg:bg-gradient-to-r lg:from-slate-900 lg:via-slate-900/80 lg:to-transparent" />
 
@@ -228,8 +232,10 @@ function Payment() {
                     </div>
                 </div>
 
-                {/* RIGHT SECTION: Donation Form (Scrolls Naturally) */}
-                <div className="order-2 flex w-full flex-col bg-white lg:w-7/12 xl:w-1/2">
+                {/* RIGHT SECTION: 
+                    lg:overflow-y-auto gives this specific div its own scrollbar. The main window will not scroll! 
+                */}
+                <div className="order-2 flex w-full flex-col bg-white lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto">
                     <div className="mx-auto w-full max-w-2xl flex-grow px-6 py-10 lg:px-12 lg:py-16">
 
                         <div className="mb-8 border-b border-slate-100 pb-6">
@@ -254,7 +260,7 @@ function Payment() {
                                     <p className="text-sm text-slate-500 mb-4 ml-8">Select an amount or enter any custom amount.</p>
                                 </div>
                                 
-                                {/* Quick-Select Chips */}
+                                {/* Distinct Quick-Select Buttons */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {predefinedAmounts.map((amt) => (
                                         <button
