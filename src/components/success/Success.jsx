@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { QRCodeSVG } from "qrcode.react";
 import html2canvas from "html2canvas";
-import { Share2, Download, CheckCircle2 } from "lucide-react"; // Optional: assumes lucide-react is installed
+import { Share2, Download, CheckCircle2 } from "lucide-react"; 
 import logo from "../../assets/logo.png";
 
 function Success({
@@ -10,7 +10,7 @@ function Success({
   merchantTransactionId,
   transactionId,
   paymentInstrument,
-  message,
+  message, // Kept in props in case you need it elsewhere, but omitted from the hard receipt
   createdAt,
 }) {
   const receiptRef = useRef(null);
@@ -27,17 +27,23 @@ function Success({
   const formatDate = (isoString) => {
     return new Intl.DateTimeFormat("en-IN", {
       day: "2-digit",
-      month: "long",
+      month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     }).format(isoString ? new Date(isoString) : new Date());
+  };
+
+  const TransactionDetails = {
+    UPI: { label: "UPI UTR", field: "utr" },
+    CARD: { label: "Card Type", field: "cardType" },
   };
 
   const captureReceipt = async () => {
     if (!receiptRef.current) return null;
     return await html2canvas(receiptRef.current, {
-      scale: 3, // Higher scale for professional print quality
+      scale: 3, 
       backgroundColor: "#ffffff",
       useCORS: true,
       logging: false,
@@ -45,148 +51,171 @@ function Success({
   };
 
   const handleDownload = async () => {
+    if (isProcessing) return;
     setIsProcessing(true);
-    const canvas = await captureReceipt();
-    if (canvas) {
-      const link = document.createElement("a");
-      link.download = `Satyalok_Receipt_${merchantTransactionId}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
+    
+    try {
+      const canvas = await captureReceipt();
+      if (canvas) {
+        const link = document.createElement("a");
+        link.download = `Receipt_${merchantTransactionId}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      }
+    } finally {
+      setIsProcessing(false);
     }
-    setIsProcessing(false);
   };
 
   const handleShare = async () => {
+    if (isProcessing) return;
     setIsProcessing(true);
-    const canvas = await captureReceipt();
-    if (!canvas) {
-      setIsProcessing(false);
-      return;
-    }
+    
+    try {
+      const canvas = await captureReceipt();
+      if (!canvas) return;
 
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], "receipt.png", { type: "image/png" });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            title: "Satyalok Contribution Receipt",
-            text: "I just supported Satyalok in bringing education to children. Join the movement!",
-            files: [file],
-          });
-        } catch (err) {
-          if (err.name !== "AbortError") handleDownload();
+      canvas.toBlob(async (blob) => {
+        const file = new File([blob], `Receipt_${merchantTransactionId}.png`, { type: "image/png" });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: "Contribution Receipt",
+              text: "Transaction receipt for my contribution to Satyalok.",
+              files: [file],
+            });
+          } catch (err) {
+            if (err.name !== "AbortError") handleDownload();
+          }
+        } else {
+          handleDownload();
         }
-      } else {
-        handleDownload();
-      }
+      }, "image/png");
+    } finally {
       setIsProcessing(false);
-    }, "image/png");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 py-12 px-4 flex flex-col items-center">
-      {/* Success Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 text-green-600 rounded-full mb-4">
-          <CheckCircle2 size={32} />
-        </div>
-        <h1 className="text-2xl font-bold text-slate-900">Contribution Successful</h1>
-        <p className="text-slate-500">Thank you for being a part of Satyalok</p>
-      </div>
-
+    <div className="min-h-screen bg-gray-50 py-12 px-4 flex flex-col items-center font-sans">
+      
+      {/* Container */}
       <div className="relative w-full max-w-md">
-        {/* ACTION BUTTONS - These will NOT appear in the downloaded image */}
-        <div
-          data-html2canvas-ignore="true"
-          className="absolute -top-12 right-0 flex gap-3"
+        
+        {/* ACTION BUTTONS - Ignored by html2canvas */}
+        <div 
+          data-html2canvas-ignore="true" 
+          className="flex justify-end gap-3 mb-4"
         >
           <button
             onClick={handleDownload}
             disabled={isProcessing}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-md text-xs font-medium text-slate-600 hover:bg-slate-50 transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm disabled:opacity-50"
           >
-            <Download size={14} /> {isProcessing ? "..." : "Download"}
+            <Download size={16} /> 
+            {isProcessing ? "Processing..." : "Download"}
           </button>
           <button
             onClick={handleShare}
             disabled={isProcessing}
-            className="flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-white rounded-md text-xs font-medium hover:bg-black transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-black transition-colors shadow-sm disabled:opacity-50"
           >
-            <Share2 size={14} /> Share
+            <Share2 size={16} /> 
+            Share
           </button>
         </div>
 
-        {/* ACTUAL RECEIPT */}
+        {/* RECEIPT CARD */}
         <div
           ref={receiptRef}
-          className="bg-white shadow-xl rounded-xl overflow-hidden border border-slate-200"
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
         >
-          {/* Holi Brand Strip */}
-          <div className="h-1.5 bg-gradient-to-r from-pink-400 via-purple-400 to-orange-400" />
-
-          <div className="p-8">
-            <div className="flex justify-between items-start mb-10">
-              <div>
-                <img src={logo} alt="Satyalok" className="h-8 mb-2" />
-                <p className="text-[10px] text-slate-400 uppercase tracking-tighter">Official Donation Receipt</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-slate-500 uppercase">Amount Paid</p>
-                <p className="text-2xl font-bold text-slate-900">{formattedAmount}</p>
-              </div>
+          {/* Header */}
+          <div className="p-8 border-b border-gray-100">
+            <div className="flex justify-between items-start mb-8">
+              <img src={logo} alt="Satyalok" className="h-7" />
+              <span className="text-xs font-semibold tracking-widest text-gray-400 uppercase">
+                Receipt
+              </span>
             </div>
 
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-between pb-3 border-b border-slate-50">
-                <span className="text-xs text-slate-500 uppercase tracking-wider">Date</span>
-                <span className="text-sm font-medium text-slate-800">{formatDate(createdAt)}</span>
+            <div className="text-center">
+              <p className="text-sm text-gray-500 mb-2">Amount Paid</p>
+              <h1 className="text-4xl font-light text-gray-900 tracking-tight mb-3">
+                {formattedAmount}
+              </h1>
+              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-medium">
+                <CheckCircle2 size={14} />
+                Transaction Successful
               </div>
-              <div className="flex justify-between pb-3 border-b border-slate-50">
-                <span className="text-xs text-slate-500 uppercase tracking-wider">Receipt No.</span>
-                <span className="text-sm font-mono text-slate-800">{merchantTransactionId}</span>
+            </div>
+          </div>
+
+          {/* Details */}
+          <div className="p-8">
+            <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wider mb-5">
+              Transaction Details
+            </h3>
+            
+            <dl className="space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <dt className="text-gray-500">Date & Time</dt>
+                <dd className="font-medium text-gray-900">{formatDate(createdAt)}</dd>
               </div>
-              <div className="flex justify-between pb-3 border-b border-slate-50">
-                <span className="text-xs text-slate-500 uppercase tracking-wider">Method</span>
-                <span className="text-sm font-semibold text-slate-800 uppercase">{paymentInstrument.type}</span>
+              
+              <div className="flex justify-between items-center text-sm">
+                <dt className="text-gray-500">Receipt Number</dt>
+                <dd className="font-mono text-gray-900">{merchantTransactionId}</dd>
               </div>
-              {paymentInstrument.utr && (
-                <div className="flex justify-between pb-3 border-b border-slate-50">
-                  <span className="text-xs text-slate-500 uppercase tracking-wider">UTR Reference</span>
-                  <span className="text-sm font-mono text-slate-800">{paymentInstrument.utr}</span>
+              
+              <div className="flex justify-between items-center text-sm">
+                <dt className="text-gray-500">Transaction ID</dt>
+                <dd className="font-mono text-gray-900">{transactionId}</dd>
+              </div>
+              
+              <div className="flex justify-between items-center text-sm">
+                <dt className="text-gray-500">Payment Method</dt>
+                <dd className="font-medium text-gray-900 uppercase">{paymentInstrument.type}</dd>
+              </div>
+
+              {paymentInstrument.type in TransactionDetails && (
+                <div className="flex justify-between items-center text-sm">
+                  <dt className="text-gray-500">
+                    {TransactionDetails[paymentInstrument.type].label}
+                  </dt>
+                  <dd className="font-mono text-gray-900">
+                    {paymentInstrument[TransactionDetails[paymentInstrument.type]?.field]?.replace("_", " ")}
+                  </dd>
                 </div>
               )}
-            </div>
-
-            {/* QR & Verification */}
-            <div className="flex items-center gap-6 p-4 bg-slate-50 rounded-lg">
-              <div className="bg-white p-1 border border-slate-200 rounded">
-                <QRCodeSVG value={statusUrl} size={64} level="M" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-slate-800">Secure Verification</p>
-                <p className="text-[10px] text-slate-500 leading-tight mt-1">
-                  Scan this code to verify the authenticity of this transaction on the Satyalok portal.
-                </p>
-              </div>
-            </div>
+            </dl>
           </div>
 
-          {/* Footer Message */}
-          <div className="bg-slate-900 text-white p-6 text-center">
-            <p className="text-xs italic opacity-90 mb-1">
-              "Your kindness creates a canvas of opportunity for those in need."
-            </p>
-            <p className="text-[10px] uppercase tracking-widest opacity-60">Satyalok - A New Hope</p>
+          {/* Footer & QR */}
+          <div className="bg-gray-50 p-6 border-t border-gray-100 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">Satyalok</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Scan QR code to verify this receipt online.
+              </p>
+            </div>
+            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm shrink-0">
+              <QRCodeSVG value={statusUrl} size={48} level="L" />
+            </div>
           </div>
         </div>
+
       </div>
 
-      <a
-        href="https://donate.satyalok.in"
-        className="mt-8 text-sm font-medium text-slate-500 hover:text-slate-800 transition"
-      >
-        ← Back to Donation Page
-      </a>
+      <div data-html2canvas-ignore="true" className="mt-8">
+        <a
+          href="https://donate.satyalok.in"
+          className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          Return to Dashboard
+        </a>
+      </div>
     </div>
   );
 }
@@ -198,6 +227,7 @@ Success.propTypes = {
   paymentInstrument: PropTypes.shape({
     type: PropTypes.string.isRequired,
     utr: PropTypes.string,
+    cardType: PropTypes.string,
   }).isRequired,
   message: PropTypes.string,
   createdAt: PropTypes.string,
