@@ -5,11 +5,11 @@ import {
     Shield,
     Lock,
     AlertCircle,
-    Check,
     Info,
     CreditCard,
     Loader2,
-    ArrowRight
+    ArrowRight,
+    BookOpen
 } from "lucide-react";
 import bgImage from "../../assets/images/image_3.jpeg";
 import logo from "../../assets/logo_white.png";
@@ -67,6 +67,11 @@ function Payment() {
     const [serverStatus, setServerStatus] = useState("checking");
     const [serverVersion, setServerVersion] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Derived state for Impact Calculation
+    const currentAmount = Number(formData.amount) || 0;
+    const childrenSupported = Math.floor(currentAmount / 500);
+    const deficitForOneChild = 500 - currentAmount;
 
     // Check Server Health
     useEffect(() => {
@@ -146,7 +151,6 @@ function Payment() {
     if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loading /></div>;
 
     return (
-        // FIX: Added 'overflow-x-hidden' and 'w-full' to prevent horizontal scroll issues
         <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-50 font-sans selection:bg-blue-100 selection:text-blue-900">
             <Header />
 
@@ -258,19 +262,21 @@ function Payment() {
                             )}
 
                             {/* Amount Section */}
-                            <div className="space-y-3">
-                                <label className="block text-sm font-medium text-slate-700">Donation Amount (INR)</label>
-                                <div className="relative">
-                                    <span className="absolute left-4 top-3.5 text-slate-400">₹</span>
-                                    <input
-                                        type="number"
-                                        name="amount"
-                                        value={formData.amount}
-                                        onChange={handleChange}
-                                        className={`w-full rounded-lg border px-4 pl-8 py-3 text-lg font-semibold outline-none transition-all ${errors.amount ? "border-red-300 bg-red-50" : "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50"}`}
-                                    />
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Donation Amount (INR)</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-3.5 text-slate-400">₹</span>
+                                        <input
+                                            type="number"
+                                            name="amount"
+                                            value={formData.amount}
+                                            onChange={handleChange}
+                                            className={`w-full rounded-lg border px-4 pl-8 py-3 text-lg font-semibold outline-none transition-all ${errors.amount ? "border-red-300 bg-red-50" : "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-50"}`}
+                                        />
+                                    </div>
+                                    {errors.amount && <p className="text-xs text-red-600 mt-1">{errors.amount}</p>}
                                 </div>
-                                {errors.amount && <p className="text-xs text-red-600">{errors.amount}</p>}
 
                                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
                                     {predefinedAmounts.map((amt) => (
@@ -286,6 +292,40 @@ function Payment() {
                                             ₹{amt.toLocaleString()}
                                         </button>
                                     ))}
+                                </div>
+
+                                {/* DYNAMIC IMPACT CARD */}
+                                <div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50/80 p-4 transition-all duration-300">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                            <BookOpen className="h-4 w-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-emerald-900">Your Impact</h4>
+                                            
+                                            {currentAmount >= 500 ? (
+                                                <p className="mt-1 text-sm text-emerald-700 leading-relaxed">
+                                                    Amazing! Your contribution will support <span className="font-bold">{childrenSupported} child{childrenSupported > 1 ? 'ren' : ''}</span> with essential education and learning materials.
+                                                </p>
+                                            ) : currentAmount > 0 ? (
+                                                <p className="mt-1 text-sm text-emerald-700 leading-relaxed">
+                                                    You're providing crucial learning supplies! Donate{' '}
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setFormData({ ...formData, amount: '500' })}
+                                                        className="font-bold text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950 transition-colors"
+                                                    >
+                                                        ₹{deficitForOneChild} more
+                                                    </button>{' '}
+                                                    to fully sponsor 1 student's education.
+                                                </p>
+                                            ) : (
+                                                <p className="mt-1 text-sm text-emerald-700 leading-relaxed">
+                                                    Enter an amount above to see the real impact you'll make today.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
