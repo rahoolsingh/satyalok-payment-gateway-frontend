@@ -74,12 +74,22 @@ function Payment() {
     const [serverStatus, setServerStatus] = useState("checking");
     const [serverVersion, setServerVersion] = useState("");
     const [loading, setLoading] = useState(false);
+    const [factIndex, setFactIndex] = useState(0);
 
     // Derived state for Impact Calculation
     const currentAmount = Number(formData.amount) || 0;
     const childrenSupported = Math.floor(currentAmount / 500);
     const deficitForOneChild = 500 - currentAmount;
 
+    // Dynamic Facts for the Left Panel
+    const impactFacts = [
+        { title: "Direct Impact", desc: "100% of your contribution goes directly to on-ground educational programs." },
+        { title: "Education Matters", desc: "One extra year of schooling increases a child's future earnings by up to 10%." },
+        { title: "Empowering Lives", desc: "Over 2,000 students have gained access to quality education through Satyalok." },
+        { title: "Tax Benefits", desc: "Your generous donations are eligible for 80G tax exemptions." }
+    ];
+
+    // Check Server Health & Rotate Facts
     useEffect(() => {
         const wakeUpBackend = async () => {
             try {
@@ -94,6 +104,12 @@ function Payment() {
             }
         };
         wakeUpBackend();
+
+        const interval = setInterval(() => {
+            setFactIndex((prev) => (prev + 1) % impactFacts.length);
+        }, 5000); // Rotates every 5 seconds
+
+        return () => clearInterval(interval);
     }, []);
 
     const fieldsConfig = [
@@ -107,15 +123,12 @@ function Payment() {
     const validate = () => {
         const newErrors = {};
         
-        // Amount
         if (!formData.amount) newErrors.amount = "Amount is required";
         else if (isNaN(formData.amount) || Number(formData.amount) <= 0) newErrors.amount = "Enter valid amount";
 
-        // Tax/PAN
         if (taxExemption && !formData.pan) newErrors.pan = "PAN is required for 80G";
         else if (taxExemption && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(formData.pan)) newErrors.pan = "Invalid PAN format";
 
-        // Personal Details
         fieldsConfig.forEach((field) => {
             const error = field.validation(formData[field.name]);
             if (error) newErrors[field.name] = error;
@@ -158,31 +171,65 @@ function Payment() {
         <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
             <Header />
 
-            <div className="flex flex-grow flex-col lg:flex-row">
+            <div className="flex flex-grow flex-col lg:flex-row relative">
                 
-                {/* Left Section: Hero Image */}
-                <div className="relative order-1 h-72 lg:h-auto lg:w-5/12 xl:w-1/2 overflow-hidden bg-slate-900">
-                    <img src={bgImage} alt="Donate Background" className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-overlay transition-transform duration-[15s] hover:scale-105" />
+                {/* LEFT SECTION: Hero Image & Dynamic Facts
+                  Made sticky on desktop (lg) so it stays put while the right side scrolls.
+                */}
+                <div className="relative order-1 h-72 lg:h-screen lg:sticky lg:top-0 lg:w-5/12 xl:w-1/2 overflow-hidden bg-slate-900 flex-shrink-0">
+                    <img src={bgImage} alt="Donate Background" className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-overlay transition-transform duration-[20s] hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent lg:bg-gradient-to-r lg:from-slate-900 lg:via-slate-900/80 lg:to-transparent" />
 
-                    <div className="absolute inset-0 flex flex-col justify-end p-8 lg:p-16">
-                        <img src={logo} alt="Satyalok" className="mb-8 w-32 opacity-90 lg:w-40" />
-                        <h1 className="mb-4 text-3xl font-bold leading-tight text-white lg:text-5xl">
-                            Empower a Life,<br />Build a Future.
-                        </h1>
-                        <p className="mb-8 max-w-md text-slate-300 lg:text-lg">
-                            Your contribution directly funds education and healthcare initiatives for underprivileged communities.
-                        </p>
+                    <div className="absolute inset-0 flex flex-col justify-between p-8 lg:p-12 xl:p-16 z-10">
                         
-                        <div className="hidden lg:flex items-center gap-4 text-sm font-medium text-slate-300 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm max-w-md">
-                            <Shield className="text-emerald-400 h-6 w-6 shrink-0" />
-                            <p>Bank-grade 256-bit SSL encryption. Your data is perfectly secure.</p>
+                        {/* Top Content */}
+                        <div>
+                            <img src={logo} alt="Satyalok" className="mb-8 w-32 opacity-90 lg:w-40" />
+                            <h1 className="mb-4 text-3xl font-bold leading-tight text-white lg:text-5xl">
+                                Empower a Life,<br />Build a Future.
+                            </h1>
+                            <p className="max-w-md text-slate-300 lg:text-lg">
+                                Your contribution directly funds education and healthcare initiatives for underprivileged communities.
+                            </p>
                         </div>
+
+                        {/* Bottom Content: Dynamic Impact Matrix (Desktop Only) */}
+                        <div className="hidden lg:block w-full max-w-md">
+                            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 relative min-h-[140px] overflow-hidden shadow-2xl">
+                                {impactFacts.map((fact, idx) => (
+                                    <div
+                                        key={idx}
+                                        className={`absolute inset-0 p-6 flex flex-col justify-center transition-all duration-700 ease-in-out ${
+                                            idx === factIndex
+                                                ? "opacity-100 translate-y-0"
+                                                : "opacity-0 translate-y-4 pointer-events-none"
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Sparkles className="text-emerald-400 h-4 w-4" />
+                                            <h4 className="text-emerald-400 font-bold text-xs tracking-widest uppercase">{fact.title}</h4>
+                                        </div>
+                                        <p className="text-white text-lg font-medium leading-relaxed">{fact.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            {/* Carousel Indicators */}
+                            <div className="flex gap-2 mt-5 px-2">
+                                {impactFacts.map((_, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        className={`h-1 rounded-full transition-all duration-500 ${idx === factIndex ? "w-8 bg-blue-500" : "w-2 bg-white/30"}`} 
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                {/* Right Section: Donation Form */}
-                <div className="order-2 flex w-full flex-col bg-white lg:w-7/12 xl:w-1/2 overflow-y-auto">
+                {/* RIGHT SECTION: Donation Form (Scrolls Naturally) */}
+                <div className="order-2 flex w-full flex-col bg-white lg:w-7/12 xl:w-1/2">
                     <div className="mx-auto w-full max-w-2xl flex-grow px-6 py-10 lg:px-12 lg:py-16">
 
                         <div className="mb-8 border-b border-slate-100 pb-6">
@@ -207,7 +254,7 @@ function Payment() {
                                     <p className="text-sm text-slate-500 mb-4 ml-8">Select an amount or enter any custom amount.</p>
                                 </div>
                                 
-                                {/* Distinct Quick-Select Buttons (Styled like chips) */}
+                                {/* Quick-Select Chips */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     {predefinedAmounts.map((amt) => (
                                         <button
@@ -228,7 +275,7 @@ function Payment() {
                                     ))}
                                 </div>
 
-                                {/* Custom Amount Input (Styled distinctly as an input field) */}
+                                {/* Custom Amount Input */}
                                 <div className="relative flex items-center mt-2">
                                     <span className="absolute left-4 text-slate-400 font-medium text-lg">₹</span>
                                     <input
