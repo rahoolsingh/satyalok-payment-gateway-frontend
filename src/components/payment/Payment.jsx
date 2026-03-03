@@ -117,7 +117,7 @@ function Payment() {
         { label: "Mobile Number", name: "phone", type: "tel", placeholder: "XXXXXXXXXX", icon: Phone, validation: (v) => (!v ? "Required" : !/^\d{10}$/.test(v) ? "Must be 10 digits" : null) },
     ];
 
-    const predefinedAmounts = [500, 1000, 2100, 5100];
+    const predefinedAmounts = [100, 500, 1000, 2100, 5100];
 
     const validate = () => {
         const newErrors = {};
@@ -362,7 +362,7 @@ function Payment() {
                                     </div>
 
                                     {/* PAN Input */}
-                                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${taxExemption ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                                    <div className={`transition-all duration-300 ease-in-out overflow-hidden px-1 ${taxExemption ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
                                         <InputField
                                             label="PAN Number"
                                             name="pan"
