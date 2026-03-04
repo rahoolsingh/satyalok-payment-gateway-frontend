@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, KeyRound, Loader2 } from "lucide-react";
+import adminApi from "./adminApi";
 
 export default function AdminLogin() {
     const [step, setStep] = useState(1);
@@ -17,20 +18,14 @@ export default function AdminLogin() {
         setError("");
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
-            });
-
-            const data = await res.json();
+            const { data } = await adminApi.post("/admin/login", { email, password });
             if (data.success) {
                 setStep(2);
             } else {
                 setError(data.message || "Failed to login. Please check credentials.");
             }
         } catch (err) {
-            setError("Server error. Please try again.");
+            setError(err.response?.data?.message || "Server error. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -42,21 +37,14 @@ export default function AdminLogin() {
         setError("");
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/verify-login-otp`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, otp }),
-            });
-
-            const data = await res.json();
+            const { data } = await adminApi.post("/admin/verify-login-otp", { email, otp });
             if (data.success) {
-                // Assuming cookie is set securely by backend
                 navigate("/admin/dashboard");
             } else {
                 setError(data.message || "Invalid OTP.");
             }
         } catch (err) {
-            setError("Server error. Please try again.");
+            setError(err.response?.data?.message || "Server error. Please try again.");
         } finally {
             setLoading(false);
         }

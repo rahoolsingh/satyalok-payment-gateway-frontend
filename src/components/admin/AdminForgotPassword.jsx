@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, KeyRound, Lock, Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import adminApi from "./adminApi";
 
 export default function AdminForgotPassword() {
-    const [step, setStep] = useState(1); // 1: email, 2: otp + new password, 3: success
+    const [step, setStep] = useState(1);
     const [email, setEmail] = useState("");
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -18,20 +19,14 @@ export default function AdminForgotPassword() {
         setError("");
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/forgot-password`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
-            });
-            const data = await res.json();
-
+            const { data } = await adminApi.post("/admin/forgot-password", { email });
             if (data.success) {
                 setStep(2);
             } else {
                 setError(data.message || "Failed to send OTP. Please check the email address.");
             }
-        } catch {
-            setError("Server error. Please try again.");
+        } catch (err) {
+            setError(err.response?.data?.message || "Server error. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -52,20 +47,14 @@ export default function AdminForgotPassword() {
 
         setLoading(true);
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/reset-password`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, otp, newPassword }),
-            });
-            const data = await res.json();
-
+            const { data } = await adminApi.post("/admin/reset-password", { email, otp, newPassword });
             if (data.success) {
                 setStep(3);
             } else {
                 setError(data.message || "Failed to reset password.");
             }
-        } catch {
-            setError("Server error. Please try again.");
+        } catch (err) {
+            setError(err.response?.data?.message || "Server error. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -77,7 +66,6 @@ export default function AdminForgotPassword() {
             <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-96 h-96 rounded-full bg-emerald-100 blur-3xl opacity-50 mix-blend-multiply pointer-events-none" />
 
             <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md relative z-10 border border-slate-100">
-                {/* Header */}
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
                         {step === 3 ? "Password Updated!" : "Reset Password"}
@@ -95,7 +83,6 @@ export default function AdminForgotPassword() {
                     </div>
                 )}
 
-                {/* Step 1: Email */}
                 {step === 1 && (
                     <form onSubmit={handleRequestOtp} className="space-y-5">
                         <div className="space-y-1">
@@ -124,7 +111,6 @@ export default function AdminForgotPassword() {
                     </form>
                 )}
 
-                {/* Step 2: OTP + New Password */}
                 {step === 2 && (
                     <form onSubmit={handleResetPassword} className="space-y-5">
                         <div className="space-y-1">
@@ -189,7 +175,6 @@ export default function AdminForgotPassword() {
                     </form>
                 )}
 
-                {/* Step 3: Success */}
                 {step === 3 && (
                     <div className="text-center space-y-5">
                         <div className="flex justify-center">
@@ -207,7 +192,6 @@ export default function AdminForgotPassword() {
                     </div>
                 )}
 
-                {/* Footer link */}
                 {step !== 3 && (
                     <div className="mt-6 text-center">
                         <Link to="/admin/login" className="inline-flex items-center text-sm text-slate-500 hover:text-blue-600 font-medium transition-colors gap-1">

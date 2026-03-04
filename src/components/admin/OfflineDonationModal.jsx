@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { X, Loader2 } from "lucide-react";
+import adminApi from "./adminApi";
 
 export default function OfflineDonationModal({ isOpen, onClose, onAddSuccess }) {
     const [formData, setFormData] = useState({
@@ -30,13 +31,7 @@ export default function OfflineDonationModal({ isOpen, onClose, onAddSuccess }) 
         setError("");
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify(formData),
-            });
-            const data = await res.json();
+            const { data } = await adminApi.post("/admin/donations", formData);
 
             if (data.success) {
                 setFormData({
@@ -48,7 +43,7 @@ export default function OfflineDonationModal({ isOpen, onClose, onAddSuccess }) 
                 setError(data.message || "Failed to add donation");
             }
         } catch (err) {
-            setError("Server error. Please try again.");
+            setError(err.response?.data?.message || "Server error. Please try again.");
         } finally {
             setLoading(false);
         }

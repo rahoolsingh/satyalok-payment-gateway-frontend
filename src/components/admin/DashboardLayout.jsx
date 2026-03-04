@@ -1,16 +1,14 @@
 import React from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, LogOut, HeartHandshake } from "lucide-react";
+import { LogOut, HeartHandshake } from "lucide-react";
+import adminApi from "./adminApi";
 
 export default function DashboardLayout() {
     const navigate = useNavigate();
 
     const handleLogout = async () => {
         try {
-            await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/logout`, {
-                method: "POST",
-                credentials: "include",
-            });
+            await adminApi.post("/admin/logout");
             navigate("/admin/login");
         } catch (error) {
             console.error("Logout failed:", error);

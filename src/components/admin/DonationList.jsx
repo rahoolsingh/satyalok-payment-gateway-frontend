@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Download, Plus, Search, Mail, Trash2, Filter } from "lucide-react";
 import OfflineDonationModal from "./OfflineDonationModal";
+import adminApi from "./adminApi";
 
 export default function DonationList() {
     const [donations, setDonations] = useState([]);
@@ -11,26 +12,22 @@ export default function DonationList() {
     const fetchDonations = async () => {
         setLoading(true);
         try {
-            const queryParams = new URLSearchParams();
-            if (filters.search) queryParams.append("search", filters.search);
-            if (filters.paymentMethod) queryParams.append("paymentMethod", filters.paymentMethod);
+            const params = {};
+            if (filters.search) params.search = filters.search;
+            if (filters.paymentMethod) params.paymentMethod = filters.paymentMethod;
 
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations?${queryParams.toString()}`, {
-                credentials: "include",
-            });
-            const data = await res.json();
+            const { data } = await adminApi.get("/admin/donations", { params });
             if (data.success) {
                 setDonations(data.data);
             }
         } catch (error) {
-            console.error("Failed to fetch donations:", error);
+            console.error("Failed to fetch donations:", error.response?.data || error.message);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => {
-        // debounce search
         const delaySearch = setTimeout(() => {
             fetchDonations();
         }, 300);
@@ -69,11 +66,7 @@ export default function DonationList() {
         if (!window.confirm("Are you sure you want to delete this donation record? This action cannot be undone.")) return;
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations/${id}`, {
-                method: "DELETE",
-                credentials: "include",
-            });
-            const data = await res.json();
+            const { data } = await adminApi.delete(`/admin/donations/${id}`);
             if (data.success) {
                 fetchDonations();
                 alert("Donation deleted successfully.");
@@ -81,7 +74,7 @@ export default function DonationList() {
                 alert(data.message || "Failed to delete.");
             }
         } catch (error) {
-            alert("Error deleting donation.");
+            alert(error.response?.data?.message || "Error deleting donation.");
         }
     };
 
@@ -89,18 +82,14 @@ export default function DonationList() {
         if (!window.confirm("Resend receipt to this donor?")) return;
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations/${id}/resend-receipt`, {
-                method: "POST",
-                credentials: "include",
-            });
-            const data = await res.json();
+            const { data } = await adminApi.post(`/admin/donations/${id}/resend-receipt`);
             if (data.success) {
                 alert("Receipt resent successfully.");
             } else {
                 alert(data.message || "Failed to resend receipt.");
             }
         } catch (error) {
-            alert("Error resending receipt.");
+            alert(error.response?.data?.message || "Error resending receipt.");
         }
     };
 
