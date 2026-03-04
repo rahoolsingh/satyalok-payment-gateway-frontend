@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Download, Plus, Search, Mail, Trash2, Filter } from "lucide-react";
+import { Download, Plus, Search, Mail, Trash2, Filter, Calendar } from "lucide-react";
 import OfflineDonationModal from "./OfflineDonationModal";
 import adminApi from "./adminApi";
 
 export default function DonationList() {
     const [donations, setDonations] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filters, setFilters] = useState({ search: "", paymentMethod: "" });
+    const [filters, setFilters] = useState({
+        search: "",
+        paymentMethod: "",
+        startDate: "",
+        endDate: "",
+    });
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
     const fetchDonations = async () => {
@@ -15,6 +20,8 @@ export default function DonationList() {
             const params = {};
             if (filters.search) params.search = filters.search;
             if (filters.paymentMethod) params.paymentMethod = filters.paymentMethod;
+            if (filters.startDate) params.startDate = filters.startDate;
+            if (filters.endDate) params.endDate = filters.endDate;
 
             const { data } = await adminApi.get("/admin/donations", { params });
             if (data.success) {
@@ -58,7 +65,7 @@ export default function DonationList() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `donations_export_${new Date().toISOString()}.csv`;
+        a.download = `donations_export_${new Date().toISOString().slice(0, 10)}.csv`;
         a.click();
     };
 
@@ -93,15 +100,27 @@ export default function DonationList() {
         }
     };
 
+    const handleFilterChange = (field, value) => {
+        setFilters(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleClearFilters = () => {
+        setFilters({ search: "", paymentMethod: "", startDate: "", endDate: "" });
+    };
+
+    const hasActiveFilters = filters.search || filters.paymentMethod || filters.startDate || filters.endDate;
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-800">Donations</h1>
-                    <p className="text-sm text-slate-500">Manage all contributions and manual entries.</p>
+                    <p className="text-sm text-slate-500">
+                        {loading ? "Loading..." : `${donations.length} record${donations.length !== 1 ? "s" : ""} found`}
+                    </p>
                 </div>
                 <div className="flex gap-3">
-                    <button onClick={handleExportCSV} className="inline-flex items-center px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
+                    <button onClick={handleExportCSV} disabled={donations.length === 0} className="inline-flex items-center px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm disabled:opacity-50">
                         <Download className="w-4 h-4 mr-2" /> Export CSV
                     </button>
                     <button onClick={() => setIsAddModalOpen(true)} className="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-medium text-white hover:bg-blue-700 transition-colors shadow-sm">
@@ -110,37 +129,80 @@ export default function DonationList() {
                 </div>
             </div>
 
-            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row gap-4">
-                <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-5 w-5 text-slate-400" />
+            {/* Filter Bar */}
+            <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                <div className="flex flex-col sm:flex-row gap-3">
+                    {/* Search */}
+                    <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search by name, email, mobile or transaction id..."
+                            className="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            value={filters.search}
+                            onChange={(e) => handleFilterChange("search", e.target.value)}
+                        />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Search by name, email, mobile or transaction id..."
-                        className="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        value={filters.search}
-                        onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                    />
+                    {/* Payment Method */}
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Filter className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <select
+                            className="block w-full pl-9 pr-8 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-white min-w-[150px]"
+                            value={filters.paymentMethod}
+                            onChange={(e) => handleFilterChange("paymentMethod", e.target.value)}
+                        >
+                            <option value="">All Methods</option>
+                            <option value="phonepe">PhonePe</option>
+                            <option value="cash">Cash</option>
+                            <option value="upi">UPI</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
                 </div>
-                <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Filter className="h-5 w-5 text-slate-400" />
+
+                {/* Date Range Row */}
+                <div className="flex flex-col sm:flex-row gap-3 items-center">
+                    <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Calendar className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                            type="date"
+                            className="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
+                            value={filters.startDate}
+                            onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                            title="Start Date"
+                        />
                     </div>
-                    <select
-                        className="block w-full pl-10 pr-8 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-white min-w-[160px]"
-                        value={filters.paymentMethod}
-                        onChange={(e) => setFilters({ ...filters, paymentMethod: e.target.value })}
-                    >
-                        <option value="">All Methods</option>
-                        <option value="phonepe">PhonePe</option>
-                        <option value="cash">Cash</option>
-                        <option value="upi">UPI</option>
-                        <option value="bank_transfer">Bank Transfer</option>
-                    </select>
+                    <span className="text-slate-400 text-sm font-medium">to</span>
+                    <div className="relative flex-1">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Calendar className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <input
+                            type="date"
+                            className="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700"
+                            value={filters.endDate}
+                            min={filters.startDate}
+                            onChange={(e) => handleFilterChange("endDate", e.target.value)}
+                            title="End Date"
+                        />
+                    </div>
+                    {hasActiveFilters && (
+                        <button onClick={handleClearFilters} className="text-sm text-red-500 hover:text-red-700 font-medium whitespace-nowrap transition-colors">
+                            Clear all
+                        </button>
+                    )}
                 </div>
             </div>
 
+            {/* Table */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-slate-200">
@@ -161,27 +223,29 @@ export default function DonationList() {
                                 </tr>
                             ) : donations.length === 0 ? (
                                 <tr>
-                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">No donations found.</td>
+                                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                                        No donations found.{hasActiveFilters && " Try clearing the filters."}
+                                    </td>
                                 </tr>
                             ) : (
                                 donations.map((donation) => (
                                     <tr key={donation._id} className="hover:bg-slate-50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                                            {new Date(donation.createdAt).toLocaleDateString()}<br />
-                                            <span className="text-xs">{new Date(donation.createdAt).toLocaleTimeString()}</span>
+                                            {new Date(donation.createdAt).toLocaleDateString("en-IN")}<br />
+                                            <span className="text-xs">{new Date(donation.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-slate-900">{donation.name}</div>
                                             <div className="text-sm text-slate-500">{donation.email}</div>
-                                            <div className="text-sm text-slate-500">{donation.mobile}</div>
+                                            <div className="text-xs text-slate-400">{donation.mobile}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-semibold text-slate-900">₹{donation.amount}</div>
+                                            <div className="text-sm font-semibold text-slate-900">₹{donation.amount?.toLocaleString("en-IN")}</div>
                                             {donation.taxBenefit && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 mt-1">80G</span>}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 capitalize">
-                                                {donation.paymentMethod?.replace('_', ' ') || 'phonepe'}
+                                                {(donation.paymentMethod || "phonepe").replace("_", " ")}
                                             </span>
                                             {donation.createdByAdmin && <span className="ml-2 text-xs text-blue-600 font-medium">(Manual)</span>}
                                         </td>
