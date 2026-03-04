@@ -33,6 +33,7 @@ export default function OfflineDonationModal({ isOpen, onClose, onAddSuccess }) 
             const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify(formData),
             });
             const data = await res.json();

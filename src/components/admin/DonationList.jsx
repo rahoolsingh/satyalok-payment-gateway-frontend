@@ -15,7 +15,9 @@ export default function DonationList() {
             if (filters.search) queryParams.append("search", filters.search);
             if (filters.paymentMethod) queryParams.append("paymentMethod", filters.paymentMethod);
 
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations?${queryParams.toString()}`);
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations?${queryParams.toString()}`, {
+                credentials: "include",
+            });
             const data = await res.json();
             if (data.success) {
                 setDonations(data.data);
@@ -67,7 +69,10 @@ export default function DonationList() {
         if (!window.confirm("Are you sure you want to delete this donation record? This action cannot be undone.")) return;
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations/${id}`, { method: "DELETE" });
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations/${id}`, {
+                method: "DELETE",
+                credentials: "include",
+            });
             const data = await res.json();
             if (data.success) {
                 fetchDonations();
@@ -84,7 +89,10 @@ export default function DonationList() {
         if (!window.confirm("Resend receipt to this donor?")) return;
 
         try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations/${id}/resend-receipt`, { method: "POST" });
+            const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/donations/${id}/resend-receipt`, {
+                method: "POST",
+                credentials: "include",
+            });
             const data = await res.json();
             if (data.success) {
                 alert("Receipt resent successfully.");

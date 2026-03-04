@@ -9,6 +9,7 @@ export default function DashboardLayout() {
         try {
             await fetch(`${import.meta.env.VITE_BACKEND_URL}/admin/logout`, {
                 method: "POST",
+                credentials: "include",
             });
             navigate("/admin/login");
         } catch (error) {
