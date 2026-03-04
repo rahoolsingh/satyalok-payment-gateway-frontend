@@ -1,20 +1,42 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LogOut, HeartHandshake } from "lucide-react";
+import { LogOut, HeartHandshake, Loader2 } from "lucide-react";
 import adminApi from "./adminApi";
 
 export default function DashboardLayout() {
     const navigate = useNavigate();
+    const [authChecking, setAuthChecking] = useState(true);
+
+    // On mount, verify the admin is still authenticated
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                await adminApi.get("/admin/me");
+            } catch {
+                navigate("/admin/login", { replace: true });
+            } finally {
+                setAuthChecking(false);
+            }
+        };
+        checkAuth();
+    }, []);
 
     const handleLogout = async () => {
         try {
             await adminApi.post("/admin/logout");
-            navigate("/admin/login");
-        } catch (error) {
-            console.error("Logout failed:", error);
-            navigate("/admin/login");
+        } catch {
+            // continue regardless
         }
+        navigate("/admin/login");
     };
+
+    if (authChecking) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-50 flex">
@@ -38,7 +60,6 @@ export default function DashboardLayout() {
                         <HeartHandshake className="w-5 h-5 mr-3" />
                         Donations
                     </NavLink>
-                    {/* Add more links here later, e.g. Settings, Users */}
                 </nav>
 
                 <div className="p-4 border-t border-slate-200">
