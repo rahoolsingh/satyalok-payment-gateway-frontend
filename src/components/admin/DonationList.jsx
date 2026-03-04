@@ -131,10 +131,10 @@ export default function DonationList() {
 
             // Ask to mail after download
             setTimeout(() => {
-                if (window.confirm("Certificate downloaded! Would you like to also email it to the donor?")) {
+                if (window.confirm(`Certificate downloaded!\n\nWould you like to also email it to the donor at ${donation.email}?\n\n(The 80G certificate PDF will be attached to the email)`)) {
                     handleResendReceipt(donation._id);
                 }
-            }, 500);
+            }, 600);
         } catch (err) {
             alert("Failed to generate certificate. Please try again.");
         } finally {
@@ -278,6 +278,10 @@ export default function DonationList() {
                                     </td>
                                     <td className="px-5 py-3 whitespace-nowrap">
                                         <div className="font-medium text-slate-900">{d.name}</div>
+                                        {/* Receipt ID — always shown, not sensitive */}
+                                        <div className="text-xs text-slate-400 font-mono mt-0.5" title="Receipt / Reference ID">
+                                            {d.merchantTransactionId}
+                                        </div>
                                         {d.taxBenefit && (
                                             <div className="text-xs text-slate-400 mt-0.5">PAN: {hideSensitive ? "••••••••••" : d.panNumber}</div>
                                         )}
@@ -312,14 +316,17 @@ export default function DonationList() {
                                                     <Mail className="w-4 h-4" />
                                                 </button>
                                             )}
+                                            {/* 80G button: show whenever the donation has taxBenefit + panNumber + success */}
                                             {d.taxBenefit && d.panNumber && d.success && (
                                                 <button
                                                     onClick={() => handle80GDownload(d)}
-                                                    title="Download 80G Certificate"
+                                                    title={d.createdByAdmin ? "Download 80G Certificate" : "Download 80G Certificate"}
                                                     disabled={generating80g === d._id}
-                                                    className="p-1.5 text-violet-600 hover:bg-violet-50 rounded-md transition-colors disabled:opacity-50 text-xs font-semibold"
+                                                    className="p-1.5 text-violet-600 hover:bg-violet-50 rounded-md transition-colors disabled:opacity-50 text-xs font-bold border border-violet-200 hover:border-violet-400"
                                                 >
-                                                    {generating80g === d._id ? "..." : "80G"}
+                                                    {generating80g === d._id ? (
+                                                        <span className="text-xs">…</span>
+                                                    ) : "80G"}
                                                 </button>
                                             )}
                                             {d.createdByAdmin && (
