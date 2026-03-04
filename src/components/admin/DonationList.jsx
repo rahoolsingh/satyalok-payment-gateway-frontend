@@ -242,8 +242,7 @@ export default function DonationList() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-semibold text-slate-900">₹{donation.amount?.toLocaleString("en-IN")}</div>
                                             <div className="text-xs text-slate-400">
-                                                PAN Number: {donation.taxBenefit ? donation.panNumber : ""} <br />
-                                                Receipt Number: {donation.taxBenefit ? donation.receiptNumber : ""}
+                                                PAN Number: {donation.taxBenefit ? donation.panNumber : ""}
                                             </div>
                                             {donation.taxBenefit && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 mt-1">80G</span>}
                                         </td>
