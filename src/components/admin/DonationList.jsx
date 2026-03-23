@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
     useReactTable,
     getCoreRowModel,
@@ -106,8 +106,6 @@ export default function DonationList() {
 
     const mask = (val) => (hideSensitive ? "••••••" : val);
 
-    // ... Keep your existing handler functions (handleExportCSV, handleDelete, handleResendReceipt, handle80GDownload) ...
-    // Note: I omitted the bodies of these functions below for brevity, but paste your original ones here exactly as they were.
     const handleExportCSV = () => {
         if (!donations.length) return;
         const headers = [
@@ -125,9 +123,9 @@ export default function DonationList() {
         ];
         const rows = donations.map((d) =>
             [
-                new Date(d.donationDate).toLocaleDateString("en-IN")
-                    ? new Date(d.donationDate).toLocaleDateString("en-IN")
-                    : new Date(d.createdAt).toLocaleDateString("en-IN"), // fallback to createdAt if donationDate is missing
+                new Date(d.donationDate || d.createdAt).toLocaleDateString(
+                    "en-IN",
+                ),
                 d.name,
                 d.email,
                 d.mobile,
@@ -181,14 +179,13 @@ export default function DonationList() {
             alert(err.response?.data?.message || "Error resending receipt.");
         }
     };
+
     const handle80GDownload = async (donation) => {
         setGenerating80g(donation._id);
         try {
             const response = await adminApi.get(
                 `/admin/donations/${donation._id}/80g-certificate`,
-                {
-                    responseType: "blob",
-                },
+                { responseType: "blob" },
             );
             const url = URL.createObjectURL(
                 new Blob([response.data], { type: "application/pdf" }),
@@ -199,7 +196,6 @@ export default function DonationList() {
             a.click();
             URL.revokeObjectURL(url);
 
-            // Ask to mail after download
             setTimeout(() => {
                 if (
                     window.confirm(
@@ -227,7 +223,6 @@ export default function DonationList() {
             {
                 id: "date",
                 header: "Date",
-                // Sort by raw timestamp
                 accessorFn: (row) =>
                     new Date(row.donationDate || row.createdAt).getTime(),
                 cell: (info) => {
@@ -251,7 +246,7 @@ export default function DonationList() {
             {
                 id: "donor",
                 header: "Donor",
-                accessorFn: (row) => row.name, // Sort by name alphabetically
+                accessorFn: (row) => row.name,
                 cell: ({ row }) => {
                     const d = row.original;
                     return (
@@ -371,7 +366,7 @@ export default function DonationList() {
             {
                 id: "actions",
                 header: "Actions",
-                enableSorting: false, // Turn off sorting for the actions column
+                enableSorting: false,
                 cell: ({ row }) => {
                     const d = row.original;
                     return (
@@ -424,7 +419,7 @@ export default function DonationList() {
 
     return (
         <div className="space-y-6">
-            {/* Header section remains the same */}
+            {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-semibold text-slate-800 tracking-tight">
@@ -436,14 +431,199 @@ export default function DonationList() {
                             : `${donations.length} record${donations.length !== 1 ? "s" : ""} in selected range`}
                     </p>
                 </div>
-                {/* ... Header Buttons (Export CSV, Add Offline, Hide Sensitive) remain identical ... */}
+                <div className="flex items-center gap-2 flex-wrap justify-end">
+                    <button
+                        onClick={() => setHideSensitive((p) => !p)}
+                        className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium border shadow-sm transition-colors ${hideSensitive ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"}`}
+                        title={
+                            hideSensitive
+                                ? "Sensitive data hidden"
+                                : "Sensitive data visible"
+                        }
+                    >
+                        {hideSensitive ? (
+                            <EyeOff className="w-4 h-4 mr-1.5" />
+                        ) : (
+                            <Eye className="w-4 h-4 mr-1.5" />
+                        )}
+                        {hideSensitive
+                            ? "Sensitive hidden"
+                            : "Sensitive visible"}
+                    </button>
+                    <button
+                        onClick={handleExportCSV}
+                        disabled={!donations.length}
+                        className="inline-flex items-center px-3 py-2 bg-white border border-slate-200 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 shadow-sm transition-colors"
+                    >
+                        <Download className="w-4 h-4 mr-1.5" /> Export CSV
+                    </button>
+                    <button
+                        onClick={() => setIsAddModalOpen(true)}
+                        className="inline-flex items-center px-3 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 shadow-sm transition-colors"
+                    >
+                        <Plus className="w-4 h-4 mr-1.5" /> Add Offline Entry
+                    </button>
+                </div>
             </div>
 
-            {/* Stats Cards remain the same */}
+            {/* Stats Cards */}
+            {stats && !loading && (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <StatCard
+                        icon={BarChart3}
+                        label="Total Records"
+                        value={stats.total}
+                        sub={`${filters.startDate} → ${filters.endDate}`}
+                        color="bg-blue-50 text-blue-600"
+                    />
+                    <StatCard
+                        icon={CheckCircle}
+                        label="Successful"
+                        value={stats.successCount}
+                        sub={`${stats.failedCount} failed`}
+                        color="bg-emerald-50 text-emerald-600"
+                    />
+                    <StatCard
+                        icon={IndianRupee}
+                        label="Total Collected"
+                        value={`₹${(stats.totalAmount || 0).toLocaleString("en-IN")}`}
+                        sub="from successful donations"
+                        color="bg-violet-50 text-violet-600"
+                    />
+                    <StatCard
+                        icon={TrendingUp}
+                        label="Avg Donation"
+                        value={`₹${(stats.avgAmount || 0).toLocaleString("en-IN")}`}
+                        sub="per successful donor"
+                        color="bg-orange-50 text-orange-600"
+                    />
+                </div>
+            )}
 
-            {/* Filter Bar remains the same */}
+            {/* Filter Bar */}
+            <div className="bg-white p-4 rounded-md border border-slate-200 shadow-sm space-y-3">
+                <div className="flex flex-wrap gap-3">
+                    <div className="relative flex-1 min-w-[200px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search name, email, mobile, txn id..."
+                            className="block w-full pl-9 pr-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 transition-shadow"
+                            value={filters.search}
+                            onChange={(e) => f("search", e.target.value)}
+                        />
+                    </div>
+                    <div className="relative">
+                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <select
+                            className="block pl-9 pr-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white transition-shadow"
+                            value={filters.paymentMethod}
+                            onChange={(e) => f("paymentMethod", e.target.value)}
+                        >
+                            <option value="">All Methods</option>
+                            <option value="phonepe">PhonePe</option>
+                            <option value="cash">Cash</option>
+                            <option value="upi">UPI</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="cheque">Cheque</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div className="relative">
+                        <select
+                            className="block px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white transition-shadow"
+                            value={filters.status}
+                            onChange={(e) => f("status", e.target.value)}
+                        >
+                            <option value="">All Status</option>
+                            <option value="success">Success</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    {hasActiveFilters && (
+                        <button
+                            onClick={() =>
+                                setFilters((prev) => ({
+                                    ...prev,
+                                    search: "",
+                                    paymentMethod: "",
+                                    status: "",
+                                }))
+                            }
+                            className="text-sm text-red-500 hover:text-red-700 font-medium px-2"
+                        >
+                            Clear
+                        </button>
+                    )}
+                </div>
+                <div className="flex flex-wrap gap-3 items-center">
+                    <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                            type="date"
+                            className="block pl-9 pr-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 transition-shadow"
+                            value={filters.startDate}
+                            onChange={(e) => f("startDate", e.target.value)}
+                        />
+                    </div>
+                    <span className="text-slate-400 text-sm">to</span>
+                    <div className="relative">
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <input
+                            type="date"
+                            className="block pl-9 pr-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-700 transition-shadow"
+                            value={filters.endDate}
+                            min={filters.startDate}
+                            onChange={(e) => f("endDate", e.target.value)}
+                        />
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() =>
+                                setFilters((prev) => ({
+                                    ...prev,
+                                    ...getDefaultDates(),
+                                }))
+                            }
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1.5 border border-blue-200 rounded-md bg-blue-50 transition-colors"
+                        >
+                            Last 7 days
+                        </button>
+                        <button
+                            onClick={() => {
+                                const end = new Date(),
+                                    start = new Date();
+                                start.setDate(1);
+                                f(
+                                    "startDate",
+                                    start.toISOString().slice(0, 10),
+                                );
+                                f("endDate", end.toISOString().slice(0, 10));
+                            }}
+                            className="text-xs text-slate-600 hover:text-slate-800 font-medium px-2 py-1.5 border border-slate-200 rounded-md bg-slate-50 transition-colors"
+                        >
+                            This month
+                        </button>
+                        <button
+                            onClick={() => {
+                                const end = new Date(),
+                                    start = new Date();
+                                start.setFullYear(start.getFullYear(), 0, 1);
+                                f(
+                                    "startDate",
+                                    start.toISOString().slice(0, 10),
+                                );
+                                f("endDate", end.toISOString().slice(0, 10));
+                            }}
+                            className="text-xs text-slate-600 hover:text-slate-800 font-medium px-2 py-1.5 border border-slate-200 rounded-md bg-slate-50 transition-colors"
+                        >
+                            This year
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-            {/* TanStack Data Table - Microsoft Fluent Themed */}
+            {/* TanStack Data Table */}
             <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-sm align-middle text-slate-700">
@@ -468,8 +648,6 @@ export default function DonationList() {
                                                         .header,
                                                     header.getContext(),
                                                 )}
-
-                                                {/* Sorting Indicators */}
                                                 {header.column.getCanSort() && (
                                                     <span className="text-slate-400">
                                                         {{
