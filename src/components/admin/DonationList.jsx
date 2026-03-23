@@ -63,7 +63,7 @@ export default function DonationList() {
     const [filters, setFilters] = useState({
         search: "",
         paymentMethod: "",
-        status: "",
+        status: "success",
         ...getDefaultDates(),
     });
     const [hideSensitive, setHideSensitive] = useState(true);
@@ -531,13 +531,11 @@ export default function DonationList() {
                     </div>
                     <div className="relative">
                         <select
+                            disabled={true}
                             className="block px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white transition-shadow"
                             value={filters.status}
-                            onChange={(e) => f("status", e.target.value)}
                         >
-                            <option value="">All Status</option>
                             <option value="success">Success</option>
-                            <option value="failed">Failed</option>
                         </select>
                     </div>
                     {hasActiveFilters && (
