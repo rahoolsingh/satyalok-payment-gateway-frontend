@@ -3,6 +3,7 @@ import {
     useReactTable,
     getCoreRowModel,
     getSortedRowModel,
+    getPaginationRowModel,
     flexRender,
 } from "@tanstack/react-table";
 import {
@@ -23,6 +24,8 @@ import {
     ArrowUpDown,
     ChevronUp,
     ChevronDown,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import OfflineDonationModal from "./OfflineDonationModal";
 import adminApi from "./adminApi";
@@ -43,14 +46,23 @@ const StatCard = ({ icon: Icon, label, value, sub, color }) => (
     </div>
 );
 
+// Format a Date as YYYY-MM-DD using *local* time.
+// toISOString() is UTC, which shifted the range back a day for IST users.
+const toLocalISODate = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+};
+
 // Get default date range (last 7 days)
 const getDefaultDates = () => {
     const end = new Date();
     const start = new Date();
     start.setDate(start.getDate() - 7);
     return {
-        startDate: start.toISOString().slice(0, 10),
-        endDate: end.toISOString().slice(0, 10),
+        startDate: toLocalISODate(start),
+        endDate: toLocalISODate(end),
     };
 };
 
@@ -69,15 +81,19 @@ export default function DonationList() {
     const [hideSensitive, setHideSensitive] = useState(true);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [generating80g, setGenerating80g] = useState(null);
+    const [error, setError] = useState("");
+    // Date window actually applied by the API (null => search spans all dates)
+    const [dateRangeApplied, setDateRangeApplied] = useState(null);
 
-    // TanStack Sorting State
+    // TanStack Sorting + Pagination State
     const [sorting, setSorting] = useState([]);
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
 
     const fetchDonations = async () => {
         setLoading(true);
         try {
             const params = {};
-            if (filters.search) params.search = filters.search;
+            if (filters.search) params.search = filters.search.trim();
             if (filters.paymentMethod)
                 params.paymentMethod = filters.paymentMethod;
             if (filters.status) params.status = filters.status;
@@ -88,11 +104,16 @@ export default function DonationList() {
             if (data.success) {
                 setDonations(data.data);
                 setStats(data.stats);
+                setDateRangeApplied(data.dateRange || null);
+                setError("");
+            } else {
+                setError(data.message || "Failed to load donations.");
             }
-        } catch (error) {
-            console.error(
-                "Failed to fetch donations:",
-                error.response?.data || error.message,
+        } catch (err) {
+            setError(
+                err.response?.data?.message ||
+                    err.message ||
+                    "Failed to fetch donations.",
             );
         } finally {
             setLoading(false);
@@ -100,6 +121,8 @@ export default function DonationList() {
     };
 
     useEffect(() => {
+        // any filter change restarts from the first page
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
         const t = setTimeout(fetchDonations, 300);
         return () => clearTimeout(t);
     }, [filters]);
@@ -215,7 +238,9 @@ export default function DonationList() {
     const f = (field, value) =>
         setFilters((prev) => ({ ...prev, [field]: value }));
     const hasActiveFilters =
-        filters.search || filters.paymentMethod || filters.status;
+        Boolean(filters.search) ||
+        Boolean(filters.paymentMethod) ||
+        filters.status !== "success";
 
     // --- TanStack Table Column Definitions ---
     const columns = useMemo(
@@ -411,10 +436,12 @@ export default function DonationList() {
     const table = useReactTable({
         data: donations,
         columns,
-        state: { sorting },
+        state: { sorting, pagination },
         onSortingChange: setSorting,
+        onPaginationChange: setPagination,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
     });
 
     return (
@@ -466,6 +493,19 @@ export default function DonationList() {
                 </div>
             </div>
 
+            {/* Error banner — a failed request must never leave stale rows silently */}
+            {error && (
+                <div className="flex items-start justify-between gap-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    <span>{error}</span>
+                    <button
+                        onClick={fetchDonations}
+                        className="shrink-0 font-medium text-red-700 underline hover:text-red-900"
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
+
             {/* Stats Cards */}
             {stats && !loading && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -473,7 +513,15 @@ export default function DonationList() {
                         icon={BarChart3}
                         label="Total Records"
                         value={stats.total}
-                        sub={`${filters.startDate} → ${filters.endDate}`}
+                        sub={
+                            dateRangeApplied
+                                ? `${toLocalISODate(
+                                      new Date(dateRangeApplied.start),
+                                  )} → ${toLocalISODate(
+                                      new Date(dateRangeApplied.end),
+                                  )}`
+                                : "searching all dates"
+                        }
                         color="bg-blue-50 text-blue-600"
                     />
                     <StatCard
@@ -531,11 +579,14 @@ export default function DonationList() {
                     </div>
                     <div className="relative">
                         <select
-                            disabled={true}
+                            title="Filter by payment status"
                             className="block px-3 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white transition-shadow"
                             value={filters.status}
+                            onChange={(e) => f("status", e.target.value)}
                         >
-                            <option value="success">Success</option>
+                            <option value="success">Successful</option>
+                            <option value="failed">Failed</option>
+                            <option value="all">All statuses</option>
                         </select>
                     </div>
                     {hasActiveFilters && (
@@ -545,7 +596,7 @@ export default function DonationList() {
                                     ...prev,
                                     search: "",
                                     paymentMethod: "",
-                                    status: "",
+                                    status: "success",
                                 }))
                             }
                             className="text-sm text-red-500 hover:text-red-700 font-medium px-2"
@@ -592,11 +643,8 @@ export default function DonationList() {
                                 const end = new Date(),
                                     start = new Date();
                                 start.setDate(1);
-                                f(
-                                    "startDate",
-                                    start.toISOString().slice(0, 10),
-                                );
-                                f("endDate", end.toISOString().slice(0, 10));
+                                f("startDate", toLocalISODate(start));
+                                f("endDate", toLocalISODate(end));
                             }}
                             className="text-xs text-slate-600 hover:text-slate-800 font-medium px-2 py-1.5 border border-slate-200 rounded-md bg-slate-50 transition-colors"
                         >
@@ -607,15 +655,21 @@ export default function DonationList() {
                                 const end = new Date(),
                                     start = new Date();
                                 start.setFullYear(start.getFullYear(), 0, 1);
-                                f(
-                                    "startDate",
-                                    start.toISOString().slice(0, 10),
-                                );
-                                f("endDate", end.toISOString().slice(0, 10));
+                                f("startDate", toLocalISODate(start));
+                                f("endDate", toLocalISODate(end));
                             }}
                             className="text-xs text-slate-600 hover:text-slate-800 font-medium px-2 py-1.5 border border-slate-200 rounded-md bg-slate-50 transition-colors"
                         >
                             This year
+                        </button>
+                        <button
+                            onClick={() => {
+                                f("startDate", "2020-01-01");
+                                f("endDate", toLocalISODate(new Date()));
+                            }}
+                            className="text-xs text-slate-600 hover:text-slate-800 font-medium px-2 py-1.5 border border-slate-200 rounded-md bg-slate-50 transition-colors"
+                        >
+                            All time
                         </button>
                     </div>
                 </div>
@@ -711,6 +765,101 @@ export default function DonationList() {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {donations.length > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-slate-200 bg-slate-50/60">
+                        <div className="flex items-center gap-2 text-xs text-slate-600">
+                            <span>Rows per page</span>
+                            <select
+                                className="px-2 py-1 border border-slate-200 rounded bg-white text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                value={pagination.pageSize}
+                                onChange={(e) =>
+                                    setPagination({
+                                        pageIndex: 0,
+                                        pageSize: Number(e.target.value),
+                                    })
+                                }
+                            >
+                                {[10, 25, 50, 100].map((n) => (
+                                    <option key={n} value={n}>
+                                        {n}
+                                    </option>
+                                ))}
+                                <option value={Math.max(donations.length, 1)}>
+                                    All ({donations.length})
+                                </option>
+                            </select>
+                            <span className="text-slate-300">|</span>
+                            <span>
+                                Showing{" "}
+                                <span className="font-medium text-slate-700">
+                                    {pagination.pageIndex * pagination.pageSize +
+                                        1}
+                                </span>
+                                –
+                                <span className="font-medium text-slate-700">
+                                    {Math.min(
+                                        (pagination.pageIndex + 1) *
+                                            pagination.pageSize,
+                                        donations.length,
+                                    )}
+                                </span>{" "}
+                                of{" "}
+                                <span className="font-medium text-slate-700">
+                                    {donations.length}
+                                </span>
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => table.setPageIndex(0)}
+                                disabled={!table.getCanPreviousPage()}
+                                className="p-1.5 border border-slate-200 rounded bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="First page"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                                className="px-2 py-1.5 text-xs font-medium border border-slate-200 rounded bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                Prev
+                            </button>
+                            <span className="px-2 text-xs text-slate-600 whitespace-nowrap">
+                                Page{" "}
+                                <span className="font-medium text-slate-800">
+                                    {pagination.pageIndex + 1}
+                                </span>{" "}
+                                of{" "}
+                                <span className="font-medium text-slate-800">
+                                    {Math.max(table.getPageCount(), 1)}
+                                </span>
+                            </span>
+                            <button
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                                className="px-2 py-1.5 text-xs font-medium border border-slate-200 rounded bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                            <button
+                                onClick={() =>
+                                    table.setPageIndex(
+                                        Math.max(table.getPageCount() - 1, 0),
+                                    )
+                                }
+                                disabled={!table.getCanNextPage()}
+                                className="p-1.5 border border-slate-200 rounded bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                title="Last page"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <OfflineDonationModal
