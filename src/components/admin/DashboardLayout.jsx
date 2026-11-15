@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LogOut, HeartHandshake, Loader2, Menu, X } from "lucide-react";
+import { LogOut, HeartHandshake, Repeat, Loader2, Menu, X } from "lucide-react";
 import adminApi from "./adminApi";
 
 export default function DashboardLayout() {
@@ -85,6 +85,21 @@ export default function DashboardLayout() {
                     >
                         <HeartHandshake className="w-5 h-5 mr-3" />
                         Donations
+                    </NavLink>
+
+                    <NavLink
+                        to="/admin/dashboard/pledges"
+                        onClick={() => setSidebarOpen(false)}
+                        className={({ isActive }) =>
+                            `flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+                                isActive
+                                    ? "bg-blue-50 text-blue-700"
+                                    : "text-slate-700 hover:bg-slate-100 hover:text-slate-900"
+                            }`
+                        }
+                    >
+                        <Repeat className="w-5 h-5 mr-3" />
+                        Monthly pledges
                     </NavLink>
                 </nav>
 

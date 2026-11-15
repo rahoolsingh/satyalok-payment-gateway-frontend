@@ -6,6 +6,8 @@ import PaymentRedirects from "./components/payment-redirects/PaymentRedirects";
 import Pledge from "./components/pledge/Pledge";
 import PledgeStatus from "./components/pledge/PledgeStatus";
 import DonorPortal from "./components/pledge/DonorPortal";
+import Terms from "./components/legal/Terms";
+import Privacy from "./components/legal/Privacy";
 
 import AdminRoutes from "./components/admin/AdminRoutes";
 
@@ -22,6 +24,8 @@ function App() {
                 <Route path="/pledge/status" element={<PledgeStatus />} />
                 <Route path="/pledge/manage" element={<DonorPortal />} />
                 <Route path="/pledge/manage/:token" element={<DonorPortal />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
 
                 <Route path="/admin/*" element={<AdminRoutes />} />
                 <Route path="*" element={<NotFound />} />
