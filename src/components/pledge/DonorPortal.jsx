@@ -1,20 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import PropTypes from "prop-types";
-import {
-    AlertTriangle,
-    CheckCircle2,
-    Clock,
-    Download,
-    Loader2,
-    PauseCircle,
-    PlayCircle,
-    RefreshCw,
-    Repeat,
-    ShieldCheck,
-    SkipForward,
-    XCircle,
-} from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import Header from "../header/Header";
 import {
     cancelPledge,
@@ -42,49 +29,48 @@ const formatDate = (value) =>
           }).format(new Date(value))
         : "—";
 
-const STATUS_STYLES = {
-    ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-    PAUSED: "bg-amber-50 text-amber-700 ring-amber-200",
-    PAST_DUE: "bg-red-50 text-red-700 ring-red-200",
-    CANCELLED: "bg-slate-100 text-slate-600 ring-slate-200",
-    COMPLETED: "bg-blue-50 text-blue-700 ring-blue-200",
-    PENDING_AUTH: "bg-amber-50 text-amber-700 ring-amber-200",
-    AUTH_FAILED: "bg-red-50 text-red-700 ring-red-200",
+/** Semantic colour only where it carries meaning. */
+const TONE = {
+    ACTIVE: "bg-[#16a34a]",
+    PAUSED: "bg-[#b98314]",
+    PAST_DUE: "bg-[#b4463c]",
+    PENDING_AUTH: "bg-[#b98314]",
+    AUTH_FAILED: "bg-[#b4463c]",
+    CANCELLED: "bg-[#a89e92]",
+    COMPLETED: "bg-[#a89e92]",
 };
 
-const Badge = ({ status }) => (
-    <span
-        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ring-1 ${
-            STATUS_STYLES[status] || "bg-slate-100 text-slate-600 ring-slate-200"
-        }`}
-    >
-        {status.replace(/_/g, " ")}
+const Dot = ({ status }) => (
+    <span className="flex items-center gap-2">
+        <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (TONE[status] || TONE.CANCELLED)} />
+        <span className="pl-secondary text-[13px]">
+            {String(status).replace(/_/g, " ").toLowerCase()}
+        </span>
     </span>
 );
 
-const Info = ({ label, value }) => (
-    <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            {label}
-        </p>
-        <p className="mt-0.5 font-medium text-slate-800">{value || "—"}</p>
+Dot.propTypes = { status: PropTypes.string.isRequired };
+
+const Figure = ({ label, value }) => (
+    <div className="px-5 py-4">
+        <p className="pl-muted text-[12px]">{label}</p>
+        <p className="pl-tabular mt-1 text-[24px] font-medium leading-none">{value}</p>
     </div>
 );
 
-Badge.propTypes = {
-    status: PropTypes.string.isRequired,
-};
+Figure.propTypes = { label: PropTypes.string.isRequired, value: PropTypes.string.isRequired };
 
-Info.propTypes = {
-    label: PropTypes.string.isRequired,
-    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-};
+const Row = ({ label, value }) => (
+    <div className="flex items-baseline justify-between gap-6 py-2.5">
+        <dt className="pl-muted text-[13px]">{label}</dt>
+        <dd className="pl-secondary text-right text-[13px]">{value || "—"}</dd>
+    </div>
+);
 
-Info.defaultProps = {
-    value: "",
-};
+Row.propTypes = { label: PropTypes.string.isRequired, value: PropTypes.string };
+Row.defaultProps = { value: "" };
 
-/** Email lookup shown when the donor has lost their manage link. */
+/** Email lookup for a donor who lost the manage link. */
 const LinkRequestForm = () => {
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
@@ -106,11 +92,8 @@ const LinkRequestForm = () => {
     };
 
     return (
-        <form
-            onSubmit={submit}
-            className="mx-auto mt-8 max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-            <label htmlFor="email" className="text-sm font-semibold text-slate-700">
+        <form onSubmit={submit} className="pl-card mt-6 p-6">
+            <label htmlFor="email" className="pl-secondary mb-1.5 block text-[13px] font-medium">
                 Email you pledged with
             </label>
             <input
@@ -120,30 +103,23 @@ const LinkRequestForm = () => {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="you@example.com"
-                className="mt-2 w-full rounded-xl bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900 outline-none ring-1 ring-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-600"
+                className="pl-field"
             />
-            <button
-                type="submit"
-                disabled={loading}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-70"
-            >
-                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                Email me a manage link
+            <button type="submit" disabled={loading} className="pl-btn-primary mt-4">
+                {loading && <Loader2 size={16} strokeWidth={1.5} className="animate-spin" />}
+                Email me a link
             </button>
             {message && (
-                <p className="mt-3 rounded-lg bg-slate-50 p-3 text-xs leading-relaxed text-slate-600">
-                    {message}
-                </p>
+                <p className="pl-muted mt-3 text-[12px] leading-5">{message}</p>
             )}
         </form>
     );
 };
 
 /**
- * Donor self-service portal, reached through a signed magic link.
- *
- * Everything the RBI framework expects a payer to be able to do is one click
- * away: see what will be debited and when, skip a month, pause, or cancel.
+ * Donor self-service, reached through a signed magic link.
+ * Skip, pause, resume and cancel are all one click away, as the RBI framework
+ * expects a payer to be able to do.
  */
 function DonorPortal() {
     const { token } = useParams();
@@ -195,48 +171,43 @@ function DonorPortal() {
 
     if (!token) {
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="pl-page min-h-screen">
                 <Header />
-                <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-                    <Repeat className="mx-auto h-10 w-10 text-blue-600" />
-                    <h1 className="mt-4 text-2xl font-bold text-slate-900">
+                <div className="mx-auto max-w-lg px-6 py-20">
+                    <p className="pl-mono pl-muted text-[12px]">Monthly giving</p>
+                    <h1 className="pl-display mt-3 text-[32px] leading-tight">
                         Manage your monthly pledge
                     </h1>
-                    <p className="mx-auto mt-3 max-w-md text-sm text-slate-600">
-                        Enter the email you pledged with and we&apos;ll send you a secure
-                        link to view, pause or cancel your pledge.
+                    <p className="pl-secondary mt-3 text-[14px] leading-6">
+                        Enter the email you pledged with and we will send a link to view,
+                        pause or cancel it.
                     </p>
+                    <LinkRequestForm />
                 </div>
-                <LinkRequestForm />
             </div>
         );
     }
 
     if (error && !data) {
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="pl-page min-h-screen">
                 <Header />
-                <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-                    <XCircle className="mx-auto h-10 w-10 text-red-500" />
-                    <h1 className="mt-4 text-2xl font-bold text-slate-900">
-                        Link unavailable
-                    </h1>
-                    <p className="mx-auto mt-3 max-w-md text-sm text-slate-600">
-                        {error}
-                    </p>
+                <div className="mx-auto max-w-lg px-6 py-20">
+                    <h1 className="pl-display text-[32px] leading-tight">Link unavailable</h1>
+                    <p className="pl-secondary mt-3 text-[14px] leading-6">{error}</p>
+                    <LinkRequestForm />
                 </div>
-                <LinkRequestForm />
             </div>
         );
     }
 
     if (!data) {
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="pl-page min-h-screen">
                 <Header />
-                <div className="flex justify-center py-32">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                </div>
+                <p className="pl-mono pl-muted mx-auto max-w-lg px-6 py-24 text-[12px]">
+                    Loading the pledge
+                </p>
             </div>
         );
     }
@@ -246,142 +217,88 @@ function DonorPortal() {
     const isPaused = pledge.status === "PAUSED";
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="pl-page min-h-screen">
             <Header />
 
-            <div className="mx-auto max-w-3xl px-4 py-12">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="mx-auto max-w-2xl px-6 py-16">
+                <div className="flex items-start justify-between gap-6">
                     <div>
-                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                            Your pledge
-                        </p>
-                        <h1 className="mt-1 font-mono text-lg font-bold text-slate-900">
-                            {pledge.pledgeRef}
+                        <p className="pl-mono pl-muted text-[12px]">{pledge.pledgeRef}</p>
+                        <h1 className="pl-display mt-2 text-[28px] leading-tight">
+                            {currency(pledge.amount)} a month
                         </h1>
                     </div>
-                    <Badge status={pledge.status} />
+                    <div className="pt-6">
+                        <Dot status={pledge.status} />
+                    </div>
                 </div>
 
                 {notice && (
-                    <p className="mt-5 flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                        {notice}
-                    </p>
+                    <p className="pl-accent mt-4 text-[13px] leading-5">{notice}</p>
                 )}
-
                 {error && (
-                    <p className="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700">
-                        {error}
-                    </p>
+                    <p className="mt-4 text-[13px] leading-5 text-[#b4463c]">{error}</p>
                 )}
 
-                <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                            Monthly
-                        </p>
-                        <p className="mt-1 text-2xl font-bold text-slate-900">
-                            {currency(pledge.amount)}
-                        </p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                            Donated so far
-                        </p>
-                        <p className="mt-1 text-2xl font-bold text-slate-900">
-                            {currency(pledge.totalDonated)}
-                        </p>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                            Next debit
-                        </p>
-                        <p className="mt-1 text-lg font-bold text-slate-900">
-                            {isCancelled ? "—" : formatDate(pledge.nextDebitAt)}
-                        </p>
-                    </div>
+                <div className="pl-card mt-8 divide-y divide-[rgba(31,27,22,0.09)] sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                    <Figure label="Donated so far" value={currency(pledge.totalDonated)} />
+                    <Figure label="Debits made" value={String(pledge.cyclesCompleted)} />
+                    <Figure
+                        label="Next debit"
+                        value={isCancelled ? "—" : formatDate(pledge.nextDebitAt)}
+                    />
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
-                    <div className="grid gap-3 text-sm sm:grid-cols-2">
-                        <Info label="Donor" value={pledge.donor?.name} />
-                        <Info label="Mobile" value={pledge.donor?.phone} />
-                        <Info
-                            label="Debited from"
-                            value={pledge.maskedInstrument || "Linked UPI account"}
-                        />
-                        <Info
-                            label="80G receipts"
-                            value={
-                                pledge.donor?.taxBenefit
-                                    ? `Yes · PAN ${pledge.donor.panMasked}`
-                                    : "Not requested"
-                            }
-                        />
-                        <Info label="Started" value={formatDate(pledge.startedAt)} />
-                        <Info
-                            label="Mandate valid until"
-                            value={formatDate(pledge.expiresAt)}
-                        />
-                    </div>
-                </div>
+                <dl className="pl-hairline mt-6 divide-y border-t text-[13px]">
+                    <Row label="Donor" value={pledge.donor?.name} />
+                    <Row label="Mobile" value={pledge.donor?.phone} />
+                    <Row label="Debited from" value={pledge.maskedInstrument} />
+                    <Row
+                        label="80G receipts"
+                        value={
+                            pledge.donor?.taxBenefit
+                                ? "Included, PAN " + pledge.donor.panMasked
+                                : "Not requested"
+                        }
+                    />
+                    <Row label="Started" value={formatDate(pledge.startedAt)} />
+                    <Row label="Mandate valid until" value={formatDate(pledge.expiresAt)} />
+                </dl>
 
                 {!isCancelled && (
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
-                        <p className="text-sm font-bold text-slate-900">
-                            Manage this pledge
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
+                    <div className="mt-8">
+                        <p className="pl-secondary text-[13px]">
                             Changes apply immediately. Cancelling stops every future debit.
                         </p>
 
-                        <div className="mt-4 flex flex-wrap gap-2.5">
+                        <div className="mt-4 flex flex-wrap gap-2">
                             <button
                                 type="button"
                                 onClick={() =>
-                                    runAction("skip", "This month's donation is skipped.")
+                                    runAction("skip", "This month's donation is skipped")
                                 }
                                 disabled={Boolean(busy) || isPaused}
-                                className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                className="pl-btn-quiet"
                             >
-                                {busy === "skip" ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <SkipForward className="h-4 w-4" />
-                                )}
                                 Skip this month
                             </button>
 
                             {isPaused ? (
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        runAction("resume", "Your pledge is active again.")
-                                    }
+                                    onClick={() => runAction("resume", "The pledge is active again")}
                                     disabled={Boolean(busy)}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                    className="pl-btn-quiet"
                                 >
-                                    {busy === "resume" ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <PlayCircle className="h-4 w-4" />
-                                    )}
                                     Resume
                                 </button>
                             ) : (
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        runAction("pause", "Your pledge is paused.")
-                                    }
+                                    onClick={() => runAction("pause", "The pledge is paused")}
                                     disabled={Boolean(busy)}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                    className="pl-btn-quiet"
                                 >
-                                    {busy === "pause" ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <PauseCircle className="h-4 w-4" />
-                                    )}
                                     Pause
                                 </button>
                             )}
@@ -390,41 +307,38 @@ function DonorPortal() {
                                 type="button"
                                 onClick={() => setConfirmCancel(true)}
                                 disabled={Boolean(busy)}
-                                className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
+                                className="pl-btn-quiet text-[#b4463c]"
+                                style={{ borderColor: "rgba(180,70,60,0.32)" }}
                             >
-                                <XCircle className="h-4 w-4" />
                                 Cancel pledge
                             </button>
                         </div>
 
                         {confirmCancel && (
-                            <div className="mt-4 rounded-xl bg-red-50 p-4">
-                                <p className="flex items-start gap-2 text-sm text-red-800">
-                                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                                    This cancels your mandate and stops all future debits.
-                                    You can start a new pledge any time.
+                            <div className="pl-raised mt-4 rounded-[10px] p-4">
+                                <p className="pl-secondary text-[13px] leading-5">
+                                    This cancels the mandate and stops every future debit. You
+                                    can start a new pledge any time.
                                 </p>
                                 <div className="mt-3 flex gap-2">
                                     <button
                                         type="button"
                                         onClick={() =>
-                                            runAction(
-                                                "cancel",
-                                                "Your pledge has been cancelled.",
-                                            )
+                                            runAction("cancel", "The pledge is cancelled")
                                         }
                                         disabled={busy === "cancel"}
-                                        className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-bold text-white hover:bg-red-700 disabled:opacity-60"
+                                        className="pl-btn-quiet text-[#b4463c]"
+                                        style={{ borderColor: "rgba(180,70,60,0.32)" }}
                                     >
                                         {busy === "cancel" && (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            <Loader2 size={14} strokeWidth={1.5} className="animate-spin" />
                                         )}
-                                        Yes, cancel my pledge
+                                        Cancel the pledge
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setConfirmCancel(false)}
-                                        className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100"
+                                        className="pl-btn-quiet"
                                     >
                                         Keep it
                                     </button>
@@ -434,81 +348,62 @@ function DonorPortal() {
                     </div>
                 )}
 
-                <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                    <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                        <p className="text-sm font-bold text-slate-900">Debit history</p>
+                <div className="mt-8">
+                    <div className="flex items-center justify-between">
+                        <p className="pl-secondary text-[13px] font-medium">Debit history</p>
                         <button
                             type="button"
                             onClick={load}
-                            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-700"
+                            className="pl-muted inline-flex items-center gap-1.5 text-[12px] hover:text-[#1f1b16]"
                         >
-                            <RefreshCw size={13} /> Refresh
+                            <RefreshCw size={13} strokeWidth={1.5} /> Refresh
                         </button>
                     </div>
 
-                    {debits.length === 0 && (
-                        <p className="px-5 py-8 text-center text-sm text-slate-500">
-                            No debits yet. Your first one happens when you approve the mandate.
+                    {debits.length === 0 ? (
+                        <p className="pl-muted mt-3 text-[13px]">
+                            No debits yet. The first one happens when you approve the mandate.
                         </p>
-                    )}
-
-                    <ul className="divide-y divide-slate-100">
-                        {debits.map((debit) => (
-                            <li
-                                key={`${debit.cycleNumber}-${debit.attempt}`}
-                                className="flex items-center justify-between gap-3 px-5 py-3.5"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div
-                                        className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                                            debit.status === "SUCCESS"
-                                                ? "bg-emerald-50"
-                                                : debit.status === "FAILED"
-                                                  ? "bg-red-50"
-                                                  : "bg-slate-100"
-                                        }`}
-                                    >
-                                        {debit.status === "SUCCESS" ? (
-                                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                        ) : debit.status === "FAILED" ? (
-                                            <XCircle className="h-4 w-4 text-red-500" />
-                                        ) : (
-                                            <Clock className="h-4 w-4 text-slate-400" />
+                    ) : (
+                        <ul className="pl-hairline mt-3 divide-y border-t">
+                            {debits.map((debit) => (
+                                <li
+                                    key={debit.cycleNumber + "-" + debit.attempt}
+                                    className="flex items-center justify-between gap-4 py-3"
+                                >
+                                    <div className="flex items-baseline gap-4">
+                                        <span className="pl-mono pl-muted w-[88px] shrink-0 whitespace-nowrap text-[12px]">
+                                            {formatDate(debit.scheduledFor)}
+                                        </span>
+                                        <span className="pl-tabular text-[13px]">
+                                            {currency(debit.amount)}
+                                        </span>
+                                        {debit.failedReason && (
+                                            <span className="pl-muted text-[12px]">
+                                                {debit.failedReason}
+                                            </span>
                                         )}
                                     </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900">
-                                            {currency(debit.amount)} · Month {debit.cycleNumber}
-                                        </p>
-                                        <p className="text-xs text-slate-500">
-                                            {formatDate(debit.scheduledFor)}
-                                            {debit.failedReason ? ` · ${debit.failedReason}` : ""}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                    {debit.status.toLowerCase()}
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
+                                    <Dot status={debit.status} />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
 
                 {donations.length > 0 && (
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
-                        <p className="text-sm font-bold text-slate-900">Receipts</p>
-                        <ul className="mt-3 divide-y divide-slate-100">
+                    <div className="mt-8">
+                        <p className="pl-secondary text-[13px] font-medium">Receipts</p>
+                        <ul className="pl-hairline mt-3 divide-y border-t">
                             {donations.map((donation) => (
                                 <li
                                     key={donation.transactionId}
-                                    className="flex items-center justify-between py-2.5 text-sm"
+                                    className="flex items-center justify-between gap-4 py-3 text-[13px]"
                                 >
-                                    <span className="text-slate-600">
+                                    <span className="pl-secondary pl-tabular">
                                         {formatDate(donation.donatedAt)} · {currency(donation.amount)}
                                     </span>
-                                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                                        <Download size={13} />
+                                    <span className="pl-mono pl-muted text-[11px]">
                                         {donation.certificate ? "80G emailed" : "Receipt emailed"}
                                     </span>
                                 </li>
@@ -517,21 +412,17 @@ function DonorPortal() {
                     </div>
                 )}
 
-                <p className="mt-6 flex items-start gap-2 rounded-xl bg-white p-4 text-xs leading-relaxed text-slate-500 ring-1 ring-slate-200">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                    This page never shows your full account number or UPI ID. Every debit is
-                    notified 24 hours in advance, and you can dispute any charge by replying
-                    to your receipt email.
+                <p className="pl-muted mt-8 text-[12px] leading-5">
+                    This page shows no full account number or UPI ID. Every debit is
+                    notified 24 hours ahead. To dispute a charge, reply to its receipt.
                 </p>
 
-                <div className="mt-6 text-center">
-                    <Link
-                        to="/"
-                        className="text-sm font-semibold text-slate-500 hover:text-slate-700"
-                    >
-                        Back to Satyalok donations
-                    </Link>
-                </div>
+                <Link
+                    to="/"
+                    className="pl-muted mt-6 inline-block text-[13px] hover:text-[#1f1b16]"
+                >
+                    Satyalok donations
+                </Link>
             </div>
         </div>
     );

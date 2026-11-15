@@ -1,21 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import PropTypes from "prop-types";
-import {
-    CheckCircle2,
-    Clock,
-    XCircle,
-    CalendarClock,
-    ShieldCheck,
-    RefreshCw,
-    ArrowLeft,
-} from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import Header from "../header/Header";
-import Loading from "../loading/Loading";
 import { fetchPledgeStatus } from "./pledgeApi";
 
 const POLL_INTERVAL_MS = 4000;
-const MAX_POLLS = 45; // ~3 minutes, then we ask the donor to check their email
+const MAX_POLLS = 45;
 
 const currency = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -31,38 +22,52 @@ const formatDate = (value) =>
               month: "short",
               year: "numeric",
           }).format(new Date(value))
-        : "—";
+        : "Not scheduled";
 
-const Row = ({ label, value, mono = false }) => (
-    <div className="flex items-center justify-between py-3 text-sm">
-        <span className="text-slate-500">{label}</span>
-        <span
-            className={`text-right font-semibold text-slate-900 ${
-                mono ? "font-mono text-xs tracking-tight" : ""
-            }`}
+const TONE = {
+    active: "bg-[#16a34a]",
+    waiting: "bg-[#b98314]",
+    failed: "bg-[#b4463c]",
+};
+
+const Status = ({ tone, children }) => (
+    <p className="flex items-center gap-2 text-[13px]">
+        <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + TONE[tone]} />
+        <span className="pl-secondary">{children}</span>
+    </p>
+);
+
+Status.propTypes = {
+    tone: PropTypes.oneOf(["active", "waiting", "failed"]).isRequired,
+    children: PropTypes.node.isRequired,
+};
+
+const Line = ({ label, value, mono = false }) => (
+    <div className="flex items-baseline justify-between gap-6 py-3">
+        <dt className="pl-muted text-[13px]">{label}</dt>
+        <dd
+            className={
+                "text-right text-[13px] " + (mono ? "pl-mono" : "pl-tabular pl-secondary")
+            }
         >
-            {value || "—"}
-        </span>
+            {value || "Not set"}
+        </dd>
     </div>
 );
 
-Row.propTypes = {
+Line.propTypes = {
     label: PropTypes.string.isRequired,
     value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     mono: PropTypes.bool,
 };
 
-Row.defaultProps = {
-    value: "",
-    mono: false,
-};
+Line.defaultProps = { value: "", mono: false };
 
 /**
- * Shown right after the donor is sent to their UPI app to approve the mandate.
+ * Shown after the donor is handed to their UPI app.
  *
- * The donor usually approves in-app without returning to this tab, so we poll the
- * server (which reconciles with the gateway) and flip to active as soon as the
- * mandate is live.
+ * The donor usually approves in-app and never returns to this tab, so the page
+ * polls the API (which reconciles with the gateway) and settles itself.
  */
 function PledgeStatus() {
     const [params] = useSearchParams();
@@ -80,7 +85,7 @@ function PledgeStatus() {
             setStatus(response.data);
             setError("");
         } catch (err) {
-            setError(err?.response?.data?.message || "Could not load your pledge.");
+            setError(err?.response?.data?.message || "This pledge could not be loaded");
         }
     }, [pledgeRef]);
 
@@ -103,20 +108,17 @@ function PledgeStatus() {
 
     if (!pledgeRef) {
         return (
-            <div className="min-h-screen bg-slate-50">
+            <div className="pl-page min-h-screen">
                 <Header />
-                <div className="mx-auto max-w-xl px-4 py-24 text-center">
-                    <h1 className="text-2xl font-bold text-slate-900">
-                        No pledge reference found
+                <div className="mx-auto max-w-lg px-6 py-24">
+                    <p className="pl-mono pl-muted text-[12px]">Monthly giving</p>
+                    <h1 className="pl-display mt-3 text-[32px] leading-tight">
+                        No pledge reference in this link
                     </h1>
-                    <p className="mt-3 text-slate-600">
-                        This link is missing a pledge reference. Start a pledge, or use the
-                        link we emailed you.
+                    <p className="pl-secondary mt-3 text-[14px] leading-6">
+                        Start a pledge, or open the link from the email we sent you.
                     </p>
-                    <Link
-                        to="/pledge"
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
-                    >
+                    <Link to="/pledge" className="pl-btn-primary mt-6 max-w-xs">
                         Start a monthly pledge
                     </Link>
                 </div>
@@ -128,127 +130,110 @@ function PledgeStatus() {
     const isFailed = ["AUTH_FAILED", "CANCELLED"].includes(status?.status);
     const waiting = !isActive && !isFailed;
 
-
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="pl-page min-h-screen">
             <Header />
 
-            <div className="mx-auto max-w-2xl px-4 py-16">
+            <div className="mx-auto max-w-lg px-6 py-16">
                 <Link
                     to="/"
-                    className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700"
+                    className="pl-muted inline-flex items-center gap-1.5 text-[13px] hover:text-[#1f1b16]"
                 >
-                    <ArrowLeft size={16} /> Back to donations
+                    <ArrowLeft size={14} strokeWidth={1.5} /> Donations
                 </Link>
 
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 p-8 text-center">
-                        {waiting && (
-                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
-                                <Clock className="h-8 w-8 text-amber-500" />
-                            </div>
-                        )}
-
-                        {isActive && (
-                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50">
-                                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
-                            </div>
-                        )}
-
-                        {isFailed && (
-                            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
-                                <XCircle className="h-8 w-8 text-red-500" />
-                            </div>
-                        )}
-
-                        <h1 className="text-2xl font-bold text-slate-900">
-                            {waiting && "Approve the mandate in your UPI app"}
-                            {isActive && "Your monthly pledge is active"}
-                            {isFailed && "We couldn't activate this pledge"}
-                        </h1>
-
-                        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-600">
-                            {waiting &&
-                                "Open your UPI app and approve the mandate request. This page updates automatically — you can close it once you've approved."}
-                            {isActive &&
-                                "Thank you! Your first donation has been received and your monthly auto-debit is now live. A receipt is on its way to your inbox."}
-                            {isFailed &&
-                                "The mandate was not approved, so no money has been debited. You can try again with a different UPI ID."}
+                <div className="pl-receipt mt-6">
+                    <div className="flex items-baseline justify-between px-6 pt-6">
+                        <p className="pl-mono pl-muted text-[11px]">
+                            {status ? status.pledgeRef : "Loading"}
+                        </p>
+                        <p className="pl-mono pl-muted text-[11px]">
+                            {status ? status.status.replace(/_/g, " ").toLowerCase() : ""}
                         </p>
                     </div>
 
+                    <div className="px-6 pt-5">
+                        <h1 className="pl-display text-[28px] leading-tight">
+                            {waiting && "Approve the mandate in your UPI app"}
+                            {isActive && "Your monthly pledge is active"}
+                            {isFailed && "This pledge was not activated"}
+                        </h1>
+
+                        <div className="mt-3">
+                            {waiting && (
+                                <Status tone="waiting">
+                                    Waiting for your approval. This page updates on its own.
+                                </Status>
+                            )}
+                            {isActive && (
+                                <Status tone="active">
+                                    First debit received. Next debit scheduled.
+                                </Status>
+                            )}
+                            {isFailed && (
+                                <Status tone="failed">
+                                    Nothing was debited. Try again with a different UPI ID.
+                                </Status>
+                            )}
+                        </div>
+                    </div>
+
                     {status && (
-                        <div className="divide-y divide-slate-100 px-8 py-6">
-                            <Row label="Pledge reference" value={status.pledgeRef} mono />
-                            <Row
-                                label="Monthly amount"
-                                value={`${currency(status.amount)} / month`}
-                            />
-                            <Row
-                                label="Status"
-                                value={status.status.replace(/_/g, " ").toLowerCase()}
-                            />
-                            <Row label="Next debit" value={formatDate(status.nextDebitAt)} />
-                            <Row
+                        <dl className="pl-hairline mx-6 mt-5 divide-y border-t">
+                            <Line label="Amount" value={currency(status.amount) + " a month"} />
+                            <Line label="Next debit" value={formatDate(status.nextDebitAt)} />
+                            <Line
                                 label="Debited from"
                                 value={status.maskedInstrument || "Linked UPI account"}
                             />
-                        </div>
+                            <Line
+                                label="Debits so far"
+                                value={String(status.cyclesCompleted || 0)}
+                                mono
+                            />
+                        </dl>
                     )}
 
-                    <div className="flex items-center justify-between gap-3 bg-slate-50 px-8 py-4">
-                        <span className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                            <ShieldCheck size={14} className="text-emerald-600" />
-                            RBI e-mandate compliant · cancel anytime
-                        </span>
-
+                    <div className="pl-perf pl-perf-notch relative mt-6 flex items-center justify-between px-6 py-3">
+                        <p className="pl-mono pl-muted text-[11px]">
+                            {waiting ? "Waiting for approval" : "Receipt emailed"}
+                        </p>
                         <button
                             type="button"
                             onClick={() => {
                                 setPollCount(0);
                                 load();
                             }}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                            className="pl-muted inline-flex items-center gap-1.5 text-[12px] hover:text-[#1f1b16]"
                         >
-                            <RefreshCw size={13} /> Refresh
+                            <RefreshCw size={13} strokeWidth={1.5} /> Refresh
                         </button>
                     </div>
                 </div>
 
                 {waiting && pollCount >= MAX_POLLS && (
-                    <p className="mt-6 flex items-start gap-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-800">
-                        <CalendarClock className="mt-0.5 h-4 w-4 shrink-0" />
-                        Still waiting? If you approved the mandate we&apos;ve emailed your
-                        confirmation and a manage link. Otherwise start again with a
-                        different UPI ID.
+                    <p className="pl-secondary mt-4 text-[13px] leading-6">
+                        Still waiting. If you approved it, the confirmation email is
+                        already on its way. Otherwise start again with a different UPI ID.
                     </p>
                 )}
 
                 {error && (
-                    <p className="mt-6 rounded-xl bg-red-50 p-4 text-sm text-red-700">
-                        {error}
-                    </p>
+                    <p className="mt-4 text-[13px] leading-6 text-[#b4463c]">{error}</p>
                 )}
 
                 {!status && !error && (
-                    <div className="mt-10 flex justify-center">
-                        <Loading />
-                    </div>
+                    <p className="pl-mono pl-muted mt-6 text-[12px]">Loading the pledge</p>
                 )}
 
                 {isActive && (
-                    <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 text-center">
-                        <p className="text-sm text-slate-600">
-                            Manage your pledge any time using the link in your welcome
-                            email, or request a fresh link.
-                        </p>
-                        <Link
-                            to="/pledge/manage"
-                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
-                        >
-                            Manage my pledge
+                    <p className="pl-secondary mt-6 text-[13px] leading-6">
+                        Manage the pledge with the link in your welcome email, or{" "}
+                        <Link to="/pledge/manage" className="pl-accent underline underline-offset-2">
+                            request a new link
                         </Link>
-                    </div>
+                        .
+                    </p>
                 )}
             </div>
         </div>

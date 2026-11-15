@@ -1,22 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
-import {
-    AlertCircle,
-    ArrowRight,
-    CheckCircle2,
-    ChevronRight,
-    CreditCard,
-    Heart,
-    Info,
-    Loader2,
-    Lock,
-    Mail,
-    Phone,
-    Repeat,
-    ShieldCheck,
-    User,
-} from "lucide-react";
+import { ArrowRight, Loader2, XCircle } from "lucide-react";
 import Header from "../header/Header";
 import ErrorCard from "../error/ErrorCard";
 import { createPledge, extractApiError, fetchPlans, newIdempotencyKey } from "./pledgeApi";
@@ -28,62 +13,141 @@ const currency = (value) =>
         maximumFractionDigits: 0,
     }).format(Number(value) || 0);
 
-const inputRing = (error) =>
-    error
-        ? "bg-red-50/50 ring-red-300 focus:ring-red-500"
-        : "ring-slate-200 hover:ring-slate-300 focus:ring-blue-600";
+/** Next three debit dates, same day each month, clamped to shorter months. */
+const nextDebitDates = (count = 3) => {
+    const today = new Date();
+    const dates = [];
 
-const planCardClass = (selected) =>
-    "flex w-full items-center justify-between rounded-xl border-2 p-4 text-left transition-all " +
-    (selected
-        ? "border-blue-600 bg-blue-50/60"
-        : "border-slate-200 hover:border-slate-300");
+    for (let step = 1; step <= count; step += 1) {
+        const monthStart = new Date(today.getFullYear(), today.getMonth() + step, 1);
+        const daysInMonth = new Date(
+            monthStart.getFullYear(),
+            monthStart.getMonth() + 1,
+            0,
+        ).getDate();
 
-const radioClass = (selected) =>
-    "flex h-5 w-5 items-center justify-center rounded-full border-2 " +
-    (selected ? "border-blue-600 bg-blue-600" : "border-slate-300");
+        dates.push(
+            new Date(
+                monthStart.getFullYear(),
+                monthStart.getMonth(),
+                Math.min(today.getDate(), daysInMonth),
+            ),
+        );
+    }
 
-const Field = (props) => {
-    const { label, name, type, placeholder, value, onChange, error, icon: Icon, hint } =
-        props;
-
-    return (
-        <div className="w-full space-y-1.5">
-            <label htmlFor={name} className="text-sm font-semibold text-slate-700">
-                {label}
-            </label>
-            <div className="relative flex items-center">
-                {Icon && (
-                    <div className="pointer-events-none absolute left-3.5 text-slate-400">
-                        <Icon size={18} />
-                    </div>
-                )}
-                <input
-                    id={name}
-                    type={type}
-                    name={name}
-                    placeholder={placeholder}
-                    value={value}
-                    onChange={onChange}
-                    autoComplete="off"
-                    className={
-                        "w-full rounded-xl border-0 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none ring-1 transition-all placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:ring-2 " +
-                        inputRing(error) +
-                        (Icon ? " pl-11" : "")
-                    }
-                />
-            </div>
-            {error ? (
-                <p className="mt-1 flex items-center text-xs font-medium text-red-600">
-                    <AlertCircle className="mr-1 h-3 w-3" />
-                    {error}
-                </p>
-            ) : (
-                hint && <p className="text-xs text-slate-400">{hint}</p>
-            )}
-        </div>
-    );
+    return dates;
 };
+
+const formatDay = (date) =>
+    new Intl.DateTimeFormat("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    }).format(date);
+
+const monthLabel = () =>
+    new Intl.DateTimeFormat("en-IN", { month: "short", year: "numeric" })
+        .format(new Date());
+
+/** The one rich element: the artefact the donor actually receives. */
+const ReceiptPreview = ({ amount, name, taxBenefit }) => (
+    <figure className="pl-receipt mt-10">
+        <div className="flex items-baseline justify-between px-5 pt-5">
+            <p className="pl-mono pl-muted text-[11px]">SL/26-27/001184</p>
+            <p className="pl-mono pl-muted text-[11px]">{monthLabel()}</p>
+        </div>
+
+        <figcaption className="pl-muted px-5 pt-5 text-[12px]">
+            Donation receipt, preview
+        </figcaption>
+
+        <div className="px-5 pb-5">
+            <p className="pl-display pl-tabular mt-1 text-[36px] leading-none">
+                {currency(amount)}
+            </p>
+
+            <dl className="mt-5 space-y-2 text-[13px]">
+                <div className="flex justify-between gap-6">
+                    <dt className="pl-muted">Donor</dt>
+                    <dd className="pl-secondary truncate">{name || "Your name"}</dd>
+                </div>
+                <div className="flex justify-between gap-6">
+                    <dt className="pl-muted">Frequency</dt>
+                    <dd className="pl-secondary pl-tabular">1 per month</dd>
+                </div>
+                <div className="flex justify-between gap-6">
+                    <dt className="pl-muted">80G certificate</dt>
+                    <dd className="pl-secondary">
+                        {taxBenefit ? "Included" : "Not requested"}
+                    </dd>
+                </div>
+            </dl>
+        </div>
+
+        <div className="pl-perf pl-perf-notch relative flex items-center justify-between px-5 py-3">
+            <p className="pl-mono pl-muted text-[11px]">Issued after every debit</p>
+            <span
+                aria-hidden="true"
+                className="pl-mono pl-muted flex h-8 w-8 -rotate-6 items-center justify-center rounded-full border border-dashed text-[9px] leading-none"
+                style={{ borderColor: "rgba(31,27,22,0.4)" }}
+            >
+                80G
+            </span>
+        </div>
+    </figure>
+);
+
+ReceiptPreview.propTypes = {
+    amount: PropTypes.number,
+    name: PropTypes.string,
+    taxBenefit: PropTypes.bool,
+};
+
+ReceiptPreview.defaultProps = {
+    amount: 0,
+    name: "",
+    taxBenefit: false,
+};
+
+/** One ledger row: label, then the supporting line. No decorative icon. */
+const Fact = ({ title, children }) => (
+    <li className="py-4 first:pt-0 last:pb-0">
+        <p className="text-[14px] font-medium">{title}</p>
+        <p className="pl-secondary mt-0.5 text-[13px] leading-5">{children}</p>
+    </li>
+);
+
+Fact.propTypes = {
+    title: PropTypes.string.isRequired,
+    children: PropTypes.node.isRequired,
+};
+
+const Field = ({ label, name, type, placeholder, value, onChange, error, hint }) => (
+    <div>
+        <label htmlFor={name} className="pl-secondary mb-1.5 block text-[13px] font-medium">
+            {label}
+        </label>
+        <input
+            id={name}
+            type={type}
+            name={name}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            autoComplete="off"
+            aria-invalid={Boolean(error)}
+            className={"pl-field " + (error ? "pl-field-error" : "")}
+        />
+        {error ? (
+            <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#b4463c]">
+                <XCircle size={14} strokeWidth={1.5} />
+                {error}
+            </p>
+        ) : (
+            hint && <p className="pl-muted mt-1.5 text-[12px]">{hint}</p>
+        )}
+    </div>
+);
 
 Field.propTypes = {
     label: PropTypes.string.isRequired,
@@ -93,7 +157,6 @@ Field.propTypes = {
     value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     onChange: PropTypes.func.isRequired,
     error: PropTypes.string,
-    icon: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
     hint: PropTypes.string,
 };
 
@@ -102,17 +165,14 @@ Field.defaultProps = {
     placeholder: "",
     value: "",
     error: undefined,
-    icon: undefined,
     hint: undefined,
 };
 
 /**
  * Monthly pledge form.
  *
- * The donor picks a tier (or a custom amount inside the server's limits), enters
- * their details plus the UPI id to be debited, and explicitly authorises the
- * recurring mandate. The disclosure text and consent checkbox are the RBI
- * "e-mandate" consent record the backend stores verbatim.
+ * Paper-and-ink direction: the chrome stays quiet and the one rich element is a
+ * live preview of the receipt the donor will actually receive.
  */
 function Pledge() {
     const navigate = useNavigate();
@@ -130,8 +190,6 @@ function Pledge() {
     const [errorMessage, setErrorMessage] = useState("");
     const [submitted, setSubmitted] = useState(false);
 
-    // One key per form session: a retry after a network error reuses it, so the
-    // server never creates a second mandate.
     const idempotencyKey = useRef(newIdempotencyKey());
 
     useEffect(() => {
@@ -147,7 +205,7 @@ function Pledge() {
             })
             .catch(() => {
                 setErrorMessage(
-                    "We could not load the monthly giving options. Please refresh the page.",
+                    "The monthly amounts could not be loaded. Refresh the page to try again.",
                 );
             });
     }, []);
@@ -158,8 +216,6 @@ function Pledge() {
         return preset ? preset.amount : 0;
     }, [planId, customAmount, plans]);
 
-    const yearlyTotal = amount * 12;
-
     const handleChange = (event) => {
         const { name, value } = event.target;
         setForm((prev) => ({ ...prev, [name]: value }));
@@ -169,33 +225,33 @@ function Pledge() {
     const validate = () => {
         const next = {};
 
-        if (form.name.trim().length < 2) next.name = "Please enter your full name.";
+        if (form.name.trim().length < 2) next.name = "Enter your full name";
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
-            next.email = "Enter a valid email address.";
+            next.email = "Enter a valid email address";
         }
 
         if (!/^[6-9]\d{9}$/.test(form.phone.replace(/\D/g, "").slice(-10))) {
-            next.phone = "Enter a valid 10 digit mobile number.";
+            next.phone = "Enter a 10 digit mobile number";
         }
 
         if (!/^[a-zA-Z0-9.\-_]{2,}@[a-zA-Z]{2,}$/.test(form.vpa.trim())) {
-            next.vpa = "Enter your UPI ID, e.g. yourname@okhdfcbank";
+            next.vpa = "Enter your UPI ID, for example yourname@okhdfcbank";
         }
 
         if (want80G && !/^[A-Z]{5}\d{4}[A-Z]$/.test(form.pan.trim().toUpperCase())) {
-            next.pan = "PAN should look like ABCDE1234F.";
+            next.pan = "PAN looks like ABCDE1234F";
         }
 
         if (!Number.isInteger(amount) || amount < 100) {
-            next.amount = "Minimum monthly amount is Rs 100.";
+            next.amount = "Minimum is " + currency(100) + " a month";
         }
 
         if (rules && rules.maxAmount && amount > rules.maxAmount) {
-            next.amount = "Maximum monthly amount is " + currency(rules.maxAmount) + ".";
+            next.amount = "Maximum is " + currency(rules.maxAmount) + " a month";
         }
 
-        if (!consent) next.consent = "Please accept the auto-debit authorisation.";
+        if (!consent) next.consent = "Tick the authorisation to continue";
 
         setErrors(next);
         return Object.keys(next).length === 0;
@@ -245,270 +301,287 @@ function Pledge() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="pl-page min-h-screen">
             <Header />
 
-            <div className="mx-auto max-w-6xl px-4 py-10 lg:py-14">
-                <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-                    <div className="lg:pt-6">
-                        <span className="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-700">
-                            <Repeat size={13} /> Monthly giving
-                        </span>
+            <div className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
+                <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-20">
+                    <div className="lg:sticky lg:top-24 lg:self-start">
+                        <p className="pl-mono pl-muted text-[12px]">Monthly giving</p>
 
-                        <h1 className="mt-5 text-3xl font-bold leading-tight text-slate-900 sm:text-4xl">
-                            {currency(amount)} a month can change a child&apos;s whole year.
+                        <h1 className="pl-display mt-4 text-[36px] leading-[1.06] sm:text-[46px]">
+                            {currency(amount)} a month can change a child&apos;s whole year
                         </h1>
 
-                        <p className="mt-4 text-base leading-relaxed text-slate-600">
-                            A monthly pledge gives our teachers and students something
-                            one-time donations never can: certainty. Your UPI mandate is set
-                            up once and debits automatically, and you can pause or cancel
-                            whenever you like.
+                        <p className="pl-secondary mt-5 max-w-md text-[15px] leading-6">
+                            Teachers and students can plan around a pledge in a way they
+                            never can around a one-time gift. Your UPI mandate is set up
+                            once and debits on the same date each month.
                         </p>
 
-                        <ul className="mt-7 space-y-4">
-                            <li className="flex gap-3.5">
-                                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-                                    <ShieldCheck className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-900">
-                                        RBI-compliant UPI AutoPay
-                                    </p>
-                                    <p className="mt-0.5 text-sm leading-relaxed text-slate-500">
-                                        A mandate you approve with your UPI PIN. We never see
-                                        or store your account details.
-                                    </p>
-                                </div>
-                            </li>
-
-                            <li className="flex gap-3.5">
-                                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-                                    <Lock className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-900">
-                                        Notified before every debit
-                                    </p>
-                                    <p className="mt-0.5 text-sm leading-relaxed text-slate-500">
-                                        An email reaches you at least 24 hours before each
-                                        charge, exactly as the RBI requires.
-                                    </p>
-                                </div>
-                            </li>
-
-                            <li className="flex gap-3.5">
-                                <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
-                                    <Heart className="h-4 w-4 text-blue-600" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-900">
-                                        Cancel in two clicks
-                                    </p>
-                                    <p className="mt-0.5 text-sm leading-relaxed text-slate-500">
-                                        Every email carries a manage link. No phone calls, no
-                                        retention scripts.
-                                    </p>
-                                </div>
-                            </li>
+                        <ul className="pl-hairline mt-8 divide-y border-t">
+                            <Fact title="RBI-compliant UPI AutoPay">
+                                You approve the mandate with your UPI PIN. We never see your
+                                account details.
+                            </Fact>
+                            <Fact title="Told before every debit">
+                                An email reaches you at least 24 hours before each charge.
+                            </Fact>
+                            <Fact title="Cancel any time">
+                                Skip a month, pause, or stop entirely from the link in any
+                                receipt.
+                            </Fact>
                         </ul>
 
-                        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5">
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                                Your commitment
+                        <ReceiptPreview
+                            amount={amount}
+                            name={form.name}
+                            taxBenefit={want80G}
+                        />
+
+                        <p className="pl-muted mt-4 text-[12px] leading-5">
+                            One debit per month, same amount each time. Every debit gets
+                            its own receipt and 80G certificate.
+                        </p>
+
+                        <div className="mt-8">
+                            <p className="pl-secondary text-[13px] font-medium">
+                                Next debits
                             </p>
-                            <div className="mt-3 flex items-end justify-between">
-                                <div>
-                                    <p className="text-3xl font-bold text-slate-900">
-                                        {currency(amount)}
-                                    </p>
-                                    <p className="text-sm text-slate-500">per month</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-lg font-semibold text-slate-700">
-                                        {currency(yearlyTotal)}
-                                    </p>
-                                    <p className="text-xs text-slate-500">per year</p>
-                                </div>
-                            </div>
-                            <p className="mt-4 flex items-start gap-1.5 text-xs text-slate-500">
-                                <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                Every debit gets its own 80G receipt. Nothing is charged
-                                until you approve the mandate.
+                            <ul className="pl-hairline mt-2 divide-y border-t">
+                                {nextDebitDates().map((date) => (
+                                    <li
+                                        key={date.toISOString()}
+                                        className="flex items-baseline justify-between py-2.5"
+                                    >
+                                        <span className="pl-mono pl-muted text-[12px]">
+                                            {formatDay(date)}
+                                        </span>
+                                        <span className="pl-tabular text-[13px]">
+                                            {currency(amount)}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="pl-muted mt-2 text-[12px]">
+                                Same date each month. A missed month is retried three
+                                times before it is skipped.
                             </p>
                         </div>
                     </div>
 
-                    <form
-                        onSubmit={handleSubmit}
-                        className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 sm:p-8"
-                    >
-                        <h2 className="text-lg font-bold text-slate-900">
-                            Set up your monthly pledge
-                        </h2>
-                        <p className="mt-1 text-sm text-slate-500">
-                            Takes about a minute. You approve the mandate in your UPI app
-                            at the end.
+                    <form onSubmit={handleSubmit} className="pl-card p-6 sm:p-8" noValidate>
+                        <h2 className="text-[16px] font-medium">Set up your monthly pledge</h2>
+                        <p className="pl-secondary mt-1 text-[13px]">
+                            About a minute. You approve it in your UPI app at the end.
                         </p>
 
-                        <div className="mt-6 space-y-2.5">
-                            {plans.map((plan) => {
-                                const selected = planId === plan.id;
+                        <fieldset className="mt-6">
+                            <legend className="pl-secondary mb-2 text-[13px] font-medium">
+                                Amount each month
+                            </legend>
 
-                                return (
-                                    <button
-                                        key={plan.id}
-                                        type="button"
-                                        onClick={() => {
-                                            setPlanId(plan.id);
-                                            setCustomAmount(String(plan.amount));
-                                            setErrors((prev) => ({
-                                                ...prev,
-                                                amount: undefined,
-                                            }));
-                                        }}
-                                        className={planCardClass(selected)}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={radioClass(selected)}>
-                                                {selected && (
-                                                    <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-900">
-                                                    {plan.label}
-                                                </p>
-                                                <p className="text-xs text-slate-500">
-                                                    {plan.impact}
-                                                </p>
-                                            </div>
-                                        </div>
+                            <div className="space-y-2">
+                                {plans.map((plan) => {
+                                    const selected = planId === plan.id;
 
-                                        <span className="text-sm font-semibold text-slate-400">
-                                            {currency(plan.amount * 12)}/yr
+                                    return (
+                                        <label
+                                            key={plan.id}
+                                            className={
+                                                "flex cursor-pointer items-center justify-between gap-4 rounded-[10px] border px-4 py-3 transition-colors " +
+                                                (selected
+                                                    ? "border-[#1f1b16] bg-[#f2ece3]"
+                                                    : "border-[rgba(31,27,22,0.12)] bg-white hover:bg-[#faf7f1]")
+                                            }
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="plan"
+                                                value={plan.id}
+                                                checked={selected}
+                                                onChange={() => {
+                                                    setPlanId(plan.id);
+                                                    setCustomAmount(String(plan.amount));
+                                                    setErrors((prev) => ({
+                                                        ...prev,
+                                                        amount: undefined,
+                                                    }));
+                                                }}
+                                                className="sr-only"
+                                            />
+
+                                            <span className="flex items-center gap-3">
+                                                <span
+                                                    aria-hidden="true"
+                                                    className={
+                                                        "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border " +
+                                                        (selected
+                                                            ? "border-[#1376c8]"
+                                                            : "border-[rgba(31,27,22,0.3)]")
+                                                    }
+                                                >
+                                                    {selected && (
+                                                        <span className="h-2 w-2 rounded-full bg-[#1376c8]" />
+                                                    )}
+                                                </span>
+
+                                                <span>
+                                                    <span className="pl-tabular block text-[14px] font-medium">
+                                                        {currency(plan.amount)} a month
+                                                    </span>
+                                                    <span className="pl-muted block text-[12px]">
+                                                        {plan.impact}
+                                                    </span>
+                                                </span>
+                                            </span>
+
+                                            <span className="pl-mono pl-muted shrink-0 text-[12px]">
+                                                {currency(plan.amount * 12)}/yr
+                                            </span>
+                                        </label>
+                                    );
+                                })}
+
+                                <label
+                                    className={
+                                        "flex cursor-pointer items-center justify-between gap-4 rounded-[10px] border px-4 py-3 transition-colors " +
+                                        (planId === "custom"
+                                            ? "border-[#1f1b16] bg-[#f2ece3]"
+                                            : "border-[rgba(31,27,22,0.12)] bg-white hover:bg-[#faf7f1]")
+                                    }
+                                >
+                                    <input
+                                        type="radio"
+                                        name="plan"
+                                        value="custom"
+                                        checked={planId === "custom"}
+                                        onChange={() => setPlanId("custom")}
+                                        className="sr-only"
+                                    />
+
+                                    <span className="flex items-center gap-3">
+                                        <span
+                                            aria-hidden="true"
+                                            className={
+                                                "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border " +
+                                                (planId === "custom"
+                                                    ? "border-[#1376c8]"
+                                                    : "border-[rgba(31,27,22,0.3)]")
+                                            }
+                                        >
+                                            {planId === "custom" && (
+                                                <span className="h-2 w-2 rounded-full bg-[#1376c8]" />
+                                            )}
                                         </span>
-                                    </button>
-                                );
-                            })}
+                                        <span className="text-[14px] font-medium">
+                                            Choose my own amount
+                                        </span>
+                                    </span>
+                                </label>
 
-                            <button
-                                type="button"
-                                onClick={() => setPlanId("custom")}
-                                className={planCardClass(planId === "custom")}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={radioClass(planId === "custom")}>
-                                        {planId === "custom" && (
-                                            <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                                {planId === "custom" && (
+                                    <div className="rounded-[10px] border border-[rgba(31,27,22,0.12)] bg-white p-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="pl-mono pl-muted text-[13px]">INR</span>
+                                            <input
+                                                type="number"
+                                                inputMode="numeric"
+                                                min={rules ? rules.minAmount : 100}
+                                                max={rules ? rules.maxAmount : 10000}
+                                                step={1}
+                                                value={customAmount}
+                                                aria-label="Custom monthly amount in rupees"
+                                                onChange={(event) => {
+                                                    setCustomAmount(event.target.value);
+                                                    setErrors((prev) => ({
+                                                        ...prev,
+                                                        amount: undefined,
+                                                    }));
+                                                }}
+                                                className="pl-tabular w-full border-0 bg-transparent p-0 text-[20px] font-medium outline-none"
+                                            />
+                                        </div>
+                                        <p className="pl-muted mt-1 text-[12px]">
+                                            {"Between " +
+                                                currency(rules ? rules.minAmount : 100) +
+                                                " and " +
+                                                currency(rules ? rules.maxAmount : 10000) +
+                                                " a month"}
+                                        </p>
+                                        {errors.amount && (
+                                            <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#b4463c]">
+                                                <XCircle size={14} strokeWidth={1.5} />
+                                                {errors.amount}
+                                            </p>
                                         )}
                                     </div>
-                                    <span className="text-sm font-bold text-slate-900">
-                                        Choose my own amount
-                                    </span>
-                                </div>
-                                <ChevronRight size={16} className="text-slate-400" />
-                            </button>
+                                )}
+                            </div>
+                        </fieldset>
 
-                            {planId === "custom" && (
-                                <div className="rounded-xl bg-slate-50 p-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-lg font-bold text-slate-500">
-                                            Rs
-                                        </span>
-                                        <input
-                                            type="number"
-                                            inputMode="numeric"
-                                            min={rules ? rules.minAmount : 100}
-                                            max={rules ? rules.maxAmount : 10000}
-                                            step={1}
-                                            value={customAmount}
-                                            onChange={(event) => {
-                                                setCustomAmount(event.target.value);
-                                                setErrors((prev) => ({
-                                                    ...prev,
-                                                    amount: undefined,
-                                                }));
-                                            }}
-                                            className="w-full rounded-lg border-0 bg-white px-3 py-2.5 text-lg font-bold text-slate-900 outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-600"
-                                        />
-                                    </div>
-                                    <p className="mt-2 text-xs text-slate-500">
-                                        Between {currency(rules ? rules.minAmount : 100)} and{" "}
-                                        {currency(rules ? rules.maxAmount : 10000)} per month.
-                                    </p>
-                                    {errors.amount && (
-                                        <p className="mt-1.5 flex items-center text-xs font-medium text-red-600">
-                                            <AlertCircle className="mr-1 h-3 w-3" />
-                                            {errors.amount}
-                                        </p>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                        <fieldset className="mt-7">
+                            <legend className="pl-secondary mb-3 text-[13px] font-medium">
+                                Your details
+                            </legend>
 
-                        <div className="mt-7 space-y-4">
-                            <Field
-                                label="Full name"
-                                name="name"
-                                type="text"
-                                placeholder="As per your PAN"
-                                value={form.name}
-                                onChange={handleChange}
-                                error={errors.name}
-                                icon={User}
-                            />
+                            <div className="space-y-4">
+                                <Field
+                                    label="Full name"
+                                    name="name"
+                                    placeholder="As printed on your PAN"
+                                    value={form.name}
+                                    onChange={handleChange}
+                                    error={errors.name}
+                                />
 
-                            <Field
-                                label="Email"
-                                name="email"
-                                type="email"
-                                placeholder="you@example.com"
-                                value={form.email}
-                                onChange={handleChange}
-                                error={errors.email}
-                                icon={Mail}
-                            />
+                                <Field
+                                    label="Email"
+                                    name="email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    value={form.email}
+                                    onChange={handleChange}
+                                    error={errors.email}
+                                />
 
-                            <Field
-                                label="Mobile"
-                                name="phone"
-                                type="tel"
-                                placeholder="10 digit number"
-                                value={form.phone}
-                                onChange={handleChange}
-                                error={errors.phone}
-                                icon={Phone}
-                            />
+                                <Field
+                                    label="Mobile"
+                                    name="phone"
+                                    type="tel"
+                                    placeholder="10 digit number"
+                                    value={form.phone}
+                                    onChange={handleChange}
+                                    error={errors.phone}
+                                />
 
-                            <Field
-                                label="UPI ID to be debited"
-                                name="vpa"
-                                type="text"
-                                placeholder="yourname@okhdfcbank"
-                                value={form.vpa}
-                                onChange={handleChange}
-                                error={errors.vpa}
-                                icon={CreditCard}
-                                hint="Used only to send the mandate request. Your bank details never reach us."
-                            />
-                        </div>
+                                <Field
+                                    label="UPI ID to debit"
+                                    name="vpa"
+                                    placeholder="yourname@okhdfcbank"
+                                    value={form.vpa}
+                                    onChange={handleChange}
+                                    error={errors.vpa}
+                                    hint="Used only to send the mandate request to your bank"
+                                />
+                            </div>
+                        </fieldset>
 
-                        <div className="mt-5 rounded-xl border border-slate-200 p-4">
+                        <div className="mt-7">
                             <label className="flex cursor-pointer items-start gap-3">
                                 <input
                                     type="checkbox"
                                     checked={want80G}
                                     onChange={(event) => setWant80G(event.target.checked)}
-                                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-[rgba(31,27,22,0.3)] accent-[#1376c8]"
                                 />
                                 <span>
-                                    <span className="block text-sm font-semibold text-slate-800">
-                                        I would like an 80G tax receipt
+                                    <span className="block text-[14px] font-medium">
+                                        Add an 80G tax receipt
                                     </span>
-                                    <span className="block text-xs text-slate-500">
-                                        Add your PAN and we will email a certificate with
-                                        every monthly receipt.
+                                    <span className="pl-muted block text-[12px] leading-5">
+                                        Needs your PAN. The certificate is attached to every
+                                        monthly receipt.
                                     </span>
                                 </span>
                             </label>
@@ -518,36 +591,29 @@ function Pledge() {
                                     <Field
                                         label="PAN"
                                         name="pan"
-                                        type="text"
                                         placeholder="ABCDE1234F"
                                         value={form.pan}
                                         onChange={(event) => {
                                             const value = event.target.value.toUpperCase();
                                             setForm((prev) => ({ ...prev, pan: value }));
-                                            setErrors((prev) => ({
-                                                ...prev,
-                                                pan: undefined,
-                                            }));
+                                            setErrors((prev) => ({ ...prev, pan: undefined }));
                                         }}
                                         error={errors.pan}
-                                        hint="Stored encrypted; used only for your 80G certificate."
+                                        hint="Encrypted at rest, used only for the certificate"
                                     />
                                 </div>
                             )}
                         </div>
 
-                        <div className="mt-5 rounded-xl bg-slate-900 p-4 text-slate-100">
-                            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                Auto-debit authorisation
-                            </p>
-                            <p className="mt-2 text-xs leading-relaxed text-slate-300">
-                                I authorise Satyalok to debit <strong className="text-white">{currency(amount)}</strong>{" "}
-                                from my UPI account every month until I cancel, starting with
-                                the first debit when I approve this mandate. I will receive a
-                                notification at least 24 hours before each debit, and I can
-                                pause, skip or cancel any time from the link in every email.
-                                A maximum of one debit per month applies, and the mandate
-                                stays valid for 5 years or until cancelled.
+                        <div className="mt-7 rounded-[10px] border border-[rgba(31,27,22,0.12)] bg-[#faf7f1] p-4">
+                            <p className="pl-mono pl-muted text-[11px]">Authorisation</p>
+                            <p className="pl-secondary mt-2 text-[13px] leading-[1.65]">
+                                I authorise Satyalok to debit{" "}
+                                <span className="pl-tabular font-medium">{currency(amount)}</span>{" "}
+                                from my UPI account every month, starting with the first
+                                debit when I approve this mandate, until I cancel. I will be
+                                told at least 24 hours before each debit. One debit a month,
+                                for the same amount, for 5 years or until cancelled.
                             </p>
                         </div>
 
@@ -559,15 +625,15 @@ function Pledge() {
                                     setConsent(event.target.checked);
                                     setErrors((prev) => ({ ...prev, consent: undefined }));
                                 }}
-                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-[rgba(31,27,22,0.3)] accent-[#1376c8]"
                             />
-                            <span className="text-xs leading-relaxed text-slate-600">
+                            <span className="pl-secondary text-[12px] leading-5">
                                 I agree to the{" "}
                                 <a
                                     href={rules ? rules.termsUrl : "/terms"}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="font-semibold text-blue-600 underline underline-offset-2"
+                                    className="pl-accent underline underline-offset-2"
                                 >
                                     terms
                                 </a>{" "}
@@ -576,17 +642,17 @@ function Pledge() {
                                     href={rules ? rules.privacyUrl : "/privacy"}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="font-semibold text-blue-600 underline underline-offset-2"
+                                    className="pl-accent underline underline-offset-2"
                                 >
                                     privacy policy
                                 </a>
-                                , and I authorise the recurring debit described above.
+                                , and to the recurring debit above.
                             </span>
                         </label>
 
                         {errors.consent && (
-                            <p className="mt-1.5 flex items-center text-xs font-medium text-red-600">
-                                <AlertCircle className="mr-1 h-3 w-3" />
+                            <p className="mt-1.5 flex items-center gap-1.5 text-[12px] text-[#b4463c]">
+                                <XCircle size={14} strokeWidth={1.5} />
                                 {errors.consent}
                             </p>
                         )}
@@ -594,38 +660,28 @@ function Pledge() {
                         <button
                             type="submit"
                             disabled={loading || submitted}
-                            className="group mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-base font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-xl disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="pl-btn-primary mt-6"
                         >
                             {loading ? (
                                 <>
-                                    <Loader2 className="h-5 w-5 animate-spin" /> Setting up
-                                    your mandate
+                                    <Loader2 size={16} strokeWidth={1.5} className="animate-spin" />
+                                    Setting up your mandate
                                 </>
                             ) : (
                                 <>
                                     Continue to UPI mandate
-                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                    <ArrowRight size={16} strokeWidth={1.5} />
                                 </>
                             )}
                         </button>
 
-                        <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                            <span className="flex items-center gap-1.5">
-                                <Lock size={11} /> 256-bit TLS
-                            </span>
-                            <span className="h-1 w-1 rounded-full bg-slate-300" />
-                            <span className="flex items-center gap-1.5">
-                                <ShieldCheck size={11} /> RBI e-mandate
-                            </span>
-                            <span className="h-1 w-1 rounded-full bg-slate-300" />
-                            <span className="flex items-center gap-1.5">
-                                <CreditCard size={11} /> PhonePe UPI AutoPay
-                            </span>
-                        </div>
+                        <p className="pl-mono pl-muted mt-4 text-[11px] leading-5">
+                            256-bit TLS · RBI e-mandate · PhonePe UPI AutoPay
+                        </p>
 
-                        <p className="mt-4 text-center text-[11px] text-slate-400">
-                            No money is debited until you approve the mandate in your UPI
-                            app. Your first debit happens at approval.
+                        <p className="pl-muted mt-3 text-[12px] leading-5">
+                            Nothing is debited until you approve the mandate in your UPI
+                            app. Your first debit happens at that moment.
                         </p>
                     </form>
                 </div>
