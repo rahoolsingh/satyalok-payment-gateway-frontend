@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { ArrowRight, Loader2, XCircle } from "lucide-react";
 import Header from "../header/Header";
@@ -169,6 +169,71 @@ Field.defaultProps = {
 };
 
 /**
+ * Shown when the programme is not switched on yet (missing gateway credentials).
+ * The one-time donation flow is the only live path, so that is where we send people.
+ */
+const ComingSoon = ({ plans, rules }) => (
+    <div className="pl-page min-h-screen">
+        <Header />
+
+        <div className="mx-auto max-w-lg px-6 py-16">
+            <p className="pl-mono pl-muted text-[12px]">Monthly giving</p>
+
+            <h1 className="pl-display mt-4 text-[34px] leading-[1.1]">
+                Monthly giving is coming soon
+            </h1>
+
+            <p className="pl-secondary mt-4 text-[15px] leading-6">
+                We are finishing the bank approvals for automatic monthly debits. Until
+                then, a one-time donation reaches the same children today.
+            </p>
+
+            {plans.length > 0 && (
+                <ul className="pl-hairline mt-8 divide-y border-t">
+                    {plans.map((plan) => (
+                        <li
+                            key={plan.id}
+                            className="flex items-baseline justify-between py-3"
+                        >
+                            <span className="pl-tabular text-[14px]">
+                                {currency(plan.amount)} a month
+                            </span>
+                            <span className="pl-mono pl-muted text-[11px]">coming soon</span>
+                        </li>
+                    ))}
+                </ul>
+            )}
+
+            <Link to="/" className="pl-btn-primary mt-8">
+                Give once instead
+                <ArrowRight size={16} strokeWidth={1.5} />
+            </Link>
+
+            <p className="pl-muted mt-4 text-[12px] leading-5">
+                Want to be told when monthly giving opens? Email{" "}
+                <a
+                    href={"mailto:" + (rules ? rules.grievanceEmail : "support@satyalok.in")}
+                    className="pl-accent underline underline-offset-2"
+                >
+                    {rules ? rules.grievanceEmail : "support@satyalok.in"}
+                </a>
+                .
+            </p>
+        </div>
+    </div>
+);
+
+ComingSoon.propTypes = {
+    plans: PropTypes.arrayOf(PropTypes.object),
+    rules: PropTypes.object,
+};
+
+ComingSoon.defaultProps = {
+    plans: [],
+    rules: null,
+};
+
+/**
  * Monthly pledge form.
  *
  * Paper-and-ink direction: the chrome stays quiet and the one rich element is a
@@ -189,12 +254,17 @@ function Pledge() {
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [capability, setCapability] = useState(null);
 
     const idempotencyKey = useRef(newIdempotencyKey());
 
     useEffect(() => {
         fetchPlans()
             .then((data) => {
+                setCapability({
+                    available: data.available !== false,
+                    previewPlans: data.previewPlans || data.plans || [],
+                });
                 setPlans(data.plans || []);
                 setRules(data.rules || null);
 
@@ -299,6 +369,12 @@ function Pledge() {
             setLoading(false);
         }
     };
+
+    // Programme not switched on: show the honest "coming soon" screen instead of
+    // a form that would fail at the gateway.
+    if (capability && capability.available === false) {
+        return <ComingSoon plans={capability.previewPlans} rules={rules} />;
+    }
 
     return (
         <div className="pl-page min-h-screen">

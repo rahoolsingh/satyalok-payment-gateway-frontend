@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
 import {
     Heart,
@@ -13,7 +14,8 @@ import {
     CheckCircle2,
     User,
     Mail,
-    Phone
+    Phone,
+    Repeat
 } from "lucide-react";
 import bgImage from "../../assets/images/image_3.jpeg";
 import logo from "../../assets/logo_white.png";
@@ -75,6 +77,8 @@ function Payment() {
     const [serverStatus, setServerStatus] = useState("checking");
     const [serverVersion, setServerVersion] = useState("");
     const [loading, setLoading] = useState(false);
+    // null = unknown (never renders anything). Only true/false from the API.
+    const [monthly, setMonthly] = useState(null);
     const [factIndex, setFactIndex] = useState(0);
 
     // Derived state for Impact Calculation
@@ -163,6 +167,17 @@ function Payment() {
         }
     };
 
+    // Probe the monthly-giving capability once. Any failure stays silent: the
+    // one-time donation flow must be unaffected when the API is unreachable.
+    useEffect(() => {
+        if (!BACKEND_URL) return;
+
+        axios
+            .get(`${BACKEND_URL}/pledge/plans`)
+            .then((res) => setMonthly({ available: res.data?.available !== false }))
+            .catch(() => setMonthly(null));
+    }, []);
+
     if (isMaintainanceMode) return <Maintainance />;
     if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loading /></div>;
 
@@ -235,6 +250,31 @@ function Payment() {
                             </h2>
                             <p className="mt-2 text-sm text-slate-500">Choose your impact, claim tax benefits, and securely complete your contribution.</p>
                         </div>
+
+                        {/* Monthly giving entry point.
+                            Renders nothing at all if the capability check fails, so
+                            this page behaves exactly as it always has. */}
+                        {monthly && (
+                            <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                {monthly.available ? (
+                                    <Link
+                                        to="/pledge"
+                                        className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-800 hover:text-blue-700"
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <Repeat size={16} className="text-slate-500" />
+                                            Give monthly instead, from ₹100 a month
+                                        </span>
+                                        <ArrowRight size={16} className="text-slate-400" />
+                                    </Link>
+                                ) : (
+                                    <p className="flex items-center gap-2 text-sm text-slate-500">
+                                        <Repeat size={16} className="text-slate-400" />
+                                        Monthly giving is coming soon. You can still give once today.
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         <form className="space-y-10">
                             
