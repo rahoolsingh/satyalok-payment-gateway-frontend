@@ -651,6 +651,14 @@ export default function PledgeList() {
                                             Mandate
                                         </h3>
                                         <DetailRow
+                                            label="Provider"
+                                            value={
+                                                detail.pledge.provider === "razorpay"
+                                                    ? "Razorpay"
+                                                    : "PhonePe Autopay"
+                                            }
+                                        />
+                                        <DetailRow
                                             label="Amount"
                                             value={`${currency(
                                                 detail.pledge.amount,

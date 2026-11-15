@@ -5,6 +5,7 @@ import { ArrowRight, Loader2, XCircle } from "lucide-react";
 import Header from "../header/Header";
 import ErrorCard from "../error/ErrorCard";
 import { createPledge, extractApiError, fetchPlans, newIdempotencyKey } from "./pledgeApi";
+import { openRazorpayCheckout } from "../../utils/razorpayCheckout";
 
 const currency = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -263,6 +264,8 @@ function Pledge() {
             .then((data) => {
                 setCapability({
                     available: data.available !== false,
+                    provider: data.provider || null,
+                    requiresVpa: data.requiresVpa !== false,
                     previewPlans: data.previewPlans || data.plans || [],
                 });
                 setPlans(data.plans || []);
@@ -305,7 +308,10 @@ function Pledge() {
             next.phone = "Enter a 10 digit mobile number";
         }
 
-        if (!/^[a-zA-Z0-9.\-_]{2,}@[a-zA-Z]{2,}$/.test(form.vpa.trim())) {
+        if (
+            capability?.requiresVpa !== false &&
+            !/^[a-zA-Z0-9.\-_]{2,}@[a-zA-Z]{2,}$/.test(form.vpa.trim())
+        ) {
             next.vpa = "Enter your UPI ID, for example yourname@okhdfcbank";
         }
 
@@ -357,6 +363,39 @@ function Pledge() {
 
             setSubmitted(true);
 
+            if (authorization.mode === "RAZORPAY_CHECKOUT" && authorization.razorpay) {
+                const rzp = authorization.razorpay;
+
+                setLoading(false);
+
+                await openRazorpayCheckout({
+                    options: {
+                        key: rzp.keyId,
+                        subscription_id: rzp.subscriptionId,
+                        name: rzp.name,
+                        description: rzp.description,
+                        prefill: rzp.prefill,
+                        notes: rzp.notes,
+                        theme: rzp.theme,
+                    },
+                    onSuccess: () => {
+                        window.location.href =
+                            "/pledge/status?ref=" +
+                            encodeURIComponent(pledge.pledgeRef);
+                    },
+                    onDismiss: () => setLoading(false),
+                    onFailed: (response) => {
+                        setErrorMessage(
+                            response?.error?.description ||
+                                "The mandate could not be authorised. Please try again.",
+                        );
+                        setLoading(false);
+                    },
+                });
+
+                return;
+            }
+
             if (authorization.redirectUrl) {
                 window.location.href = authorization.redirectUrl;
                 return;
@@ -391,14 +430,14 @@ function Pledge() {
 
                         <p className="pl-secondary mt-5 max-w-md text-[15px] leading-6">
                             Teachers and students can plan around a pledge in a way they
-                            never can around a one-time gift. Your UPI mandate is set up
-                            once and debits on the same date each month.
+                            never can around a one-time gift. Your auto-debit mandate is
+                            set up once and debits on the same date each month.
                         </p>
 
                         <ul className="pl-hairline mt-8 divide-y border-t">
-                            <Fact title="RBI-compliant UPI AutoPay">
-                                You approve the mandate with your UPI PIN. We never see your
-                                account details.
+                            <Fact title="RBI-compliant auto-debit">
+                                You approve the mandate with your bank (UPI or card). We never
+                                see your account credentials.
                             </Fact>
                             <Fact title="Told before every debit">
                                 An email reaches you at least 24 hours before each charge.
@@ -449,7 +488,7 @@ function Pledge() {
                     <form onSubmit={handleSubmit} className="pl-card p-6 sm:p-8" noValidate>
                         <h2 className="text-[16px] font-medium">Set up your monthly pledge</h2>
                         <p className="pl-secondary mt-1 text-[13px]">
-                            About a minute. You approve it in your UPI app at the end.
+                            About a minute. You approve the mandate with your bank at the end.
                         </p>
 
                         <fieldset className="mt-6">
@@ -631,15 +670,17 @@ function Pledge() {
                                     error={errors.phone}
                                 />
 
-                                <Field
-                                    label="UPI ID to debit"
-                                    name="vpa"
-                                    placeholder="yourname@okhdfcbank"
-                                    value={form.vpa}
-                                    onChange={handleChange}
-                                    error={errors.vpa}
-                                    hint="Used only to send the mandate request to your bank"
-                                />
+                                {capability?.requiresVpa !== false && (
+                                    <Field
+                                        label="UPI ID to debit"
+                                        name="vpa"
+                                        placeholder="yourname@okhdfcbank"
+                                        value={form.vpa}
+                                        onChange={handleChange}
+                                        error={errors.vpa}
+                                        hint="Used only to send the mandate request to your bank"
+                                    />
+                                )}
                             </div>
                         </fieldset>
 
@@ -686,7 +727,7 @@ function Pledge() {
                             <p className="pl-secondary mt-2 text-[13px] leading-[1.65]">
                                 I authorise Satyalok to debit{" "}
                                 <span className="pl-tabular font-medium">{currency(amount)}</span>{" "}
-                                from my UPI account every month, starting with the first
+                                from my UPI account (or the payment method I approve) every month, starting with the first
                                 debit when I approve this mandate, until I cancel. I will be
                                 told at least 24 hours before each debit. One debit a month,
                                 for the same amount, for 5 years or until cancelled.

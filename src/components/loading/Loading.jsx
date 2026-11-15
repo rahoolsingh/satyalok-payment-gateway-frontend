@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import Lottie from "react-lottie";
+import * as LottieModule from "react-lottie";
+
+// react-lottie is CommonJS. Depending on the bundler interop the default can be
+// the component itself or a namespace object wrapping it; resolve both so the
+// production build (Vite 8 / Rolldown) and dev server behave identically.
+const Lottie =
+    LottieModule?.default?.default ||
+    LottieModule?.default ||
+    LottieModule;
 import walletAnimation from "../../assets/lottie/wallet.json";
 
 function Loading() {

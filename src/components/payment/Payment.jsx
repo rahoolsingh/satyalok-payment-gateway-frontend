@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { openRazorpayCheckout } from "../../utils/razorpayCheckout";
+/* eslint-disable react/prop-types -- InputField is a local presentational helper. */
 import {
     Heart,
-    Shield,
     Lock,
     AlertCircle,
     Info,
@@ -61,6 +62,11 @@ const InputField = ({ label, name, type, placeholder, value, onChange, error, ic
     </div>
 );
 
+const impactFacts = [
+    { title: "Empowering Lives", desc: "500+ students have gained access to quality education through Satyalok." },
+    { title: "Tax Benefits", desc: "Your generous donations are eligible for 80G tax exemptions." }
+];
+
 function Payment() {
     const [formData, setFormData] = useState({
         name: "",
@@ -79,18 +85,15 @@ function Payment() {
     const [loading, setLoading] = useState(false);
     // null = unknown (never renders anything). Only true/false from the API.
     const [monthly, setMonthly] = useState(null);
+    // Which one-time rails are actually configured on this deployment.
+    const [providers, setProviders] = useState({ phonepe: true, razorpay: false });
+    const [provider, setProvider] = useState("phonepe");
     const [factIndex, setFactIndex] = useState(0);
 
     // Derived state for Impact Calculation
     const currentAmount = Number(formData.amount) || 0;
     const childrenSupported = Math.floor(currentAmount / 500);
     const deficitForOneChild = 500 - currentAmount;
-
-    // Dynamic Facts for the Left Panel
-    const impactFacts = [
-        { title: "Empowering Lives", desc: "500+ students have gained access to quality education through Satyalok." },
-        { title: "Tax Benefits", desc: "Your generous donations are eligible for 80G tax exemptions." }
-    ];
 
     // Check Server Health & Rotate Facts
     useEffect(() => {
@@ -145,6 +148,65 @@ function Payment() {
         if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: null });
     };
 
+    const payWithRazorpay = async () => {
+        const res = await axios.post(`${BACKEND_URL}/payment/razorpay/order`, formData);
+        const order = res.data?.data;
+
+        if (!res.data?.success || !order?.orderId) {
+            throw new Error(res.data?.message || "Failed to start the payment.");
+        }
+
+        await openRazorpayCheckout({
+            options: {
+                key: order.keyId,
+                order_id: order.orderId,
+                amount: order.amount,
+                currency: order.currency,
+                name: order.name,
+                description: order.description,
+                prefill: order.prefill,
+                notes: order.notes,
+                theme: order.theme,
+            },
+            onSuccess: async (response) => {
+                setLoading(true);
+                try {
+                    const verified = await axios.post(
+                        `${BACKEND_URL}/payment/razorpay/verify`,
+                        response,
+                    );
+
+                    if (verified.data?.success) {
+                        window.location.href = `/status/${verified.data.data.merchantTransactionId}`;
+                        return;
+                    }
+
+                    setErrorMessage(
+                        verified.data?.message || "We could not verify the payment.",
+                    );
+                } catch (error) {
+                    setErrorMessage(
+                        error.response?.data?.message ||
+                            "We could not verify the payment. If money was debited, it will be reconciled automatically.",
+                    );
+                } finally {
+                    setLoading(false);
+                }
+            },
+            onDismiss: () => setLoading(false),
+            onFailed: (response) => {
+                setErrorMessage(
+                    response?.error?.description ||
+                        "The payment failed. Please try again.",
+                );
+                setLoading(false);
+            },
+        });
+
+        // Checkout is open; the modal now owns the flow.
+        setLoading(false);
+    };
+
     const handleFormSubmit = async () => {
         const validationErrors = validate();
         if (Object.keys(validationErrors).length > 0) {
@@ -154,6 +216,12 @@ function Payment() {
 
         try {
             setLoading(true);
+
+            if (provider === "razorpay") {
+                await payWithRazorpay();
+                return;
+            }
+
             const res = await axios.post(`${BACKEND_URL}/order`, formData);
             if (res.data.success) {
                 window.location.href = res.data.data.instrumentResponse.redirectInfo.url;
@@ -162,7 +230,11 @@ function Payment() {
                 setLoading(false);
             }
         } catch (error) {
-            setErrorMessage("Network error. Please try again.");
+            setErrorMessage(
+                error.response?.data?.message ||
+                    error.message ||
+                    "Network error. Please try again.",
+            );
             setLoading(false);
         }
     };
@@ -176,6 +248,27 @@ function Payment() {
             .get(`${BACKEND_URL}/pledge/plans`)
             .then((res) => setMonthly({ available: res.data?.available !== false }))
             .catch(() => setMonthly(null));
+    }, []);
+
+    // Which rails exist on this deployment? Failures fall back to PhonePe, the
+    // behaviour this page has always had.
+    useEffect(() => {
+        if (!BACKEND_URL) return;
+
+        axios
+            .get(`${BACKEND_URL}/payment/providers`)
+            .then((res) => {
+                const next = {
+                    phonepe: res.data?.oneTime?.phonepe !== false,
+                    razorpay: Boolean(res.data?.oneTime?.razorpay),
+                };
+                setProviders(next);
+                if (!next.phonepe && next.razorpay) setProvider("razorpay");
+            })
+            .catch(() => {
+                setProviders({ phonepe: true, razorpay: false });
+                setProvider("phonepe");
+            });
     }, []);
 
     if (isMaintainanceMode) return <Maintainance />;
@@ -339,7 +432,7 @@ function Payment() {
                                                 </p>
                                             ) : currentAmount > 0 ? (
                                                 <p className="text-sm font-medium text-emerald-900 leading-snug">
-                                                    You're providing crucial supplies. Add{' '}
+                                                    You&apos;re providing crucial supplies. Add{' '}
                                                     <button 
                                                         type="button" 
                                                         onClick={() => {
@@ -439,6 +532,48 @@ function Payment() {
                                 </div>
                             </div>
 
+                            {(providers.razorpay || !providers.phonepe) && (
+                                <>
+                                    <div className="h-px w-full bg-slate-100"></div>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">4</span>
+                                            <h3 className="text-base font-bold text-slate-900">Payment Method</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                            {providers.phonepe && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setProvider("phonepe")}
+                                                    className={`rounded-xl border p-4 text-left transition-all ${
+                                                        provider === "phonepe"
+                                                            ? "border-blue-600 bg-blue-50/60 ring-2 ring-blue-600/20"
+                                                            : "border-slate-200 bg-white hover:border-slate-300"
+                                                    }`}
+                                                >
+                                                    <span className="block text-sm font-bold text-slate-900">PhonePe</span>
+                                                    <span className="mt-0.5 block text-xs text-slate-500">UPI, cards and wallets</span>
+                                                </button>
+                                            )}
+                                            {providers.razorpay && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setProvider("razorpay")}
+                                                    className={`rounded-xl border p-4 text-left transition-all ${
+                                                        provider === "razorpay"
+                                                            ? "border-blue-600 bg-blue-50/60 ring-2 ring-blue-600/20"
+                                                            : "border-slate-200 bg-white hover:border-slate-300"
+                                                    }`}
+                                                >
+                                                    <span className="block text-sm font-bold text-slate-900">Razorpay</span>
+                                                    <span className="mt-0.5 block text-xs text-slate-500">UPI, cards, netbanking</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
                             {/* Submit Action */}
                             <div className="pt-6">
                                 <button
@@ -454,7 +589,7 @@ function Payment() {
                                 <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
                                     <div className="flex items-center gap-1.5"><Lock size={12} /> SSL Secured</div>
                                     <div className="w-1 h-1 rounded-full bg-slate-300"></div>
-                                    <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> PhonePe Gateway</div>
+                                    <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> {provider === "razorpay" ? "Razorpay" : "PhonePe"} Gateway</div>
                                 </div>
                             </div>
                         </form>
