@@ -33,6 +33,53 @@ import { openRazorpayCheckout } from "../../utils/razorpayCheckout";
  * design language.
  */
 
+const DEFAULT_PLANS = [
+    {
+        id: "monthly_500",
+        amount: 500,
+        frequency: "MONTHLY",
+        label: "₹500 / month",
+        title: "Sponsor a child's education",
+        description: "Covers books, stationery and study material for one child.",
+        impact: "1 child supported every month",
+        highlighted: true,
+    },
+    {
+        id: "monthly_1000",
+        amount: 1000,
+        frequency: "MONTHLY",
+        label: "₹1,000 / month",
+        title: "Fund a study centre day",
+        description: "Helps run a community study centre for a full month.",
+        impact: "2 children supported every month",
+    },
+    {
+        id: "monthly_2500",
+        amount: 2500,
+        frequency: "MONTHLY",
+        label: "₹2,500 / month",
+        title: "Sustain a mentor",
+        description: "Keeps a mentor with the same children all year.",
+        impact: "5 children supported every month",
+    },
+];
+
+const DEFAULT_RULES = {
+    minAmount: 100,
+    maxAmount: 10000,
+    termsUrl: "/terms",
+    privacyUrl: "/privacy",
+    grievanceEmail: "support@satyalok.in",
+    consentVersion: "2026-11-v1",
+};
+
+const DEFAULT_CAPABILITY = {
+    available: true,
+    provider: "razorpay",
+    requiresVpa: false,
+    previewPlans: DEFAULT_PLANS,
+};
+
 const currency = (value) =>
     new Intl.NumberFormat("en-IN", {
         style: "currency",
@@ -92,11 +139,11 @@ const ComingSoon = ({ plans, onSwitchBack }) => (
 );
 
 export default function MonthlyPledgeForm({ onSwitchBack }) {
-    const [plans, setPlans] = useState([]);
-    const [rules, setRules] = useState(null);
-    const [capability, setCapability] = useState(null);
-    const [planId, setPlanId] = useState("");
-    const [customAmount, setCustomAmount] = useState("");
+    const [plans, setPlans] = useState(DEFAULT_PLANS);
+    const [rules, setRules] = useState(DEFAULT_RULES);
+    const [capability, setCapability] = useState(DEFAULT_CAPABILITY);
+    const [planId, setPlanId] = useState("monthly_500");
+    const [customAmount, setCustomAmount] = useState("500");
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -113,27 +160,44 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
     const idempotencyKey = useRef(newIdempotencyKey());
 
     useEffect(() => {
+        let alive = true;
+
         fetchPlans()
             .then((data) => {
+                if (!alive) return;
+
+                const apiPlans =
+                    Array.isArray(data.plans) && data.plans.length
+                        ? data.plans
+                        : DEFAULT_PLANS;
+
                 setCapability({
                     available: data.available !== false,
-                    provider: data.provider || null,
+                    provider: data.provider || "razorpay",
                     requiresVpa: data.requiresVpa !== false,
-                    previewPlans: data.previewPlans || [],
+                    previewPlans:
+                        data.previewPlans && data.previewPlans.length
+                            ? data.previewPlans
+                            : DEFAULT_PLANS,
                 });
-                setPlans(data.plans || []);
-                setRules(data.rules || null);
+                setPlans(apiPlans);
+                setRules({ ...DEFAULT_RULES, ...(data.rules || {}) });
 
-                if (data.plans && data.plans.length) {
-                    setPlanId(data.plans[0].id);
-                    setCustomAmount(String(data.plans[0].amount));
-                }
+                // Keep the donor's choice if the API still offers it.
+                setPlanId((current) =>
+                    apiPlans.some((plan) => plan.id === current)
+                        ? current
+                        : apiPlans[0].id,
+                );
             })
             .catch(() => {
-                setErrorMessage(
-                    "The monthly amounts could not be loaded. Refresh the page to try again.",
-                );
+                // Static defaults are already on screen; a slow API must never
+                // blank the form.
             });
+
+        return () => {
+            alive = false;
+        };
     }, []);
 
     const selectedPlan = plans.find((plan) => plan.id === planId) || null;
@@ -142,7 +206,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
             ? Number(customAmount) || 0
             : selectedPlan?.amount || 0;
     const providerName =
-        capability?.provider === "razorpay" ? "Razorpay" : "PhonePe";
+        capability?.provider === "phonepe_autopay" ? "PhonePe" : "Razorpay";
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -265,17 +329,6 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
             setLoading(false);
         }
     };
-
-    if (!capability) {
-        return (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading monthly amounts
-                </div>
-            </div>
-        );
-    }
 
     if (capability.available === false) {
         return (
