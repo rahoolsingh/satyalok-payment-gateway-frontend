@@ -310,7 +310,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
             <div className="flex items-baseline justify-between gap-3">
                 <h3 className="text-[16px] font-medium">Set up a monthly pledge</h3>
                 <span className="pl-mono pl-muted text-[11px]">
-                    {providerName}
+                    via {providerName}
                 </span>
             </div>
             <p className="pl-secondary mt-1 text-[13px] leading-5">
