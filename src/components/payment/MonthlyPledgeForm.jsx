@@ -98,7 +98,7 @@ const SectionTitle = ({ step, title }) => (
 
 const ComingSoon = ({ plans, onSwitchBack }) => (
     <div className="rounded-2xl border border-[rgba(31,27,22,0.12)] bg-white p-6 sm:p-8">
-        <p className="text-xs font-semibold tracking-wide text-[#8a847a]">
+        <p className="text-xs font-semibold tracking-wide text-[#6b6257]">
             Monthly giving
         </p>
         <h3 className="mt-2 text-xl font-medium text-[#1f1b16]">
@@ -119,7 +119,7 @@ const ComingSoon = ({ plans, onSwitchBack }) => (
                         <span className="text-sm font-semibold tabular-nums text-[#1f1b16]">
                             {currency(plan.amount)} a month
                         </span>
-                        <span className="text-xs text-[#8a847a]">
+                        <span className="text-xs text-[#6b6257]">
                             coming soon
                         </span>
                     </li>
@@ -384,7 +384,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                         className={`text-[10px] font-medium ${
                                             selected
                                                 ? "text-[#d6cec2]"
-                                                : "text-[#8a847a]"
+                                                : "text-[#6b6257]"
                                         }`}
                                     >
                                         /mo
@@ -415,7 +415,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
                     {planId === "custom" && (
                         <div className="relative flex items-center">
-                            <span className="absolute left-4 text-lg font-medium text-[#8a847a]">
+                            <span className="absolute left-4 text-lg font-medium text-[#6b6257]">
                                 ₹
                             </span>
                             <input
@@ -443,7 +443,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                     )}
 
                     {planId === "custom" && (
-                        <p className="text-xs text-[#8a847a]">
+                        <p className="text-xs text-[#6b6257]">
                             {`Between ${currency(
                                 rules ? rules.minAmount : 100,
                             )} and ${currency(
@@ -501,7 +501,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                         className={`rounded-full p-1 transition-colors ${
                                             show80GInfo
                                                 ? "bg-[#efe9df] text-[#0f5fa5]"
-                                                : "text-[#8a847a] hover:bg-[#efe9df] hover:text-[#0f5fa5]"
+                                                : "text-[#6b6257] hover:bg-[#efe9df] hover:text-[#0f5fa5]"
                                         }`}
                                         title="What is 80G?"
                                     >
@@ -626,7 +626,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
                 {/* Authorisation */}
                 <div className="rounded-2xl border border-[rgba(31,27,22,0.12)] bg-[#efe9df] p-5">
-                    <p className="text-xs font-medium uppercase tracking-wider text-[#8a847a]">
+                    <p className="text-xs font-medium uppercase tracking-wider text-[#6b6257]">
                         Authorisation
                     </p>
                     <p className="mt-2 text-sm leading-6 text-[#5e554a]">
@@ -700,7 +700,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                         )}
                     </button>
 
-                    <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider text-[#8a847a]">
+                    <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider text-[#6b6257]">
                         <div className="flex items-center gap-1.5">
                             <Lock size={12} /> SSL secured
                         </div>
@@ -710,7 +710,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                         </div>
                     </div>
 
-                    <p className="mt-5 text-center text-xs text-[#8a847a]">
+                    <p className="mt-5 text-center text-xs text-[#6b6257]">
                         Cancel or skip any month from the link in your receipt.{" "}
                         <Link
                             to="/pledge"

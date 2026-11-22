@@ -31,11 +31,7 @@ function ErrorCard({ message, setMessage }) {
             setShouldRender(true);
             requestAnimationFrame(() => setIsVisible(true));
 
-            const timer = setTimeout(() => {
-                handleClose();
-            }, 5000);
-
-            return () => clearTimeout(timer);
+            return undefined;
         }
     }, [message]);
 
@@ -51,11 +47,14 @@ function ErrorCard({ message, setMessage }) {
 
     return (
         <div
-            className={`fixed z-50 transition-all duration-500 ease-in-out ${isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-                } ${positionClass}`} // FIX: Use the state variable here
+            role="alert"
+            aria-live="assertive"
+            className={`fixed z-50 transition-[transform,opacity] duration-300 ease-out ${
+                isVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+            } ${positionClass}`} // FIX: Use the state variable here
         >
             <div className="flex max-w-md items-center gap-3 rounded-lg border border-red-100 bg-white/90 p-4 shadow-xl backdrop-blur-md ring-1 ring-black/5">
-                <XCircle className="h-6 w-6 shrink-0 text-red-500" />
+                <XCircle className="h-6 w-6 shrink-0 text-[#b4463c]" />
 
                 <div className="flex-grow">
                     <h3 className="text-sm font-semibold text-gray-900">Error</h3>
@@ -63,8 +62,10 @@ function ErrorCard({ message, setMessage }) {
                 </div>
 
                 <button
+                    type="button"
                     onClick={handleClose}
-                    className="group rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                    aria-label="Dismiss error"
+                    className="group rounded-md p-1 text-[#6b7280] transition-colors hover:bg-gray-100 hover:text-gray-600"
                 >
                     <X className="h-4 w-4" />
                 </button>

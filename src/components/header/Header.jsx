@@ -84,7 +84,7 @@ export default function Header() {
                             href="https://wa.me/918210228101?text=Hi%2C%20I%20am%20facing%20an%20issue%20with%20Satyalok%20Donation%20Portal."
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-[background-color,color,box-shadow] hover:bg-red-600 hover:text-white hover:shadow-md"
+                            className="group inline-flex items-center rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-medium text-[#b4463c] transition-[background-color,color,box-shadow] hover:bg-red-600 hover:text-white hover:shadow-md"
                         >
                             <Bug className="mr-2 h-4 w-4 transition-transform group-hover:rotate-12" />
                             Report Issue
@@ -133,7 +133,7 @@ export default function Header() {
                             href="https://wa.me/918210228101?text=Hi%2C%20I%20am%20facing%20an%20issue%20with%20Satyalok%20Donation%20Portal."
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex w-full items-center justify-center rounded-lg bg-red-50 px-4 py-3 text-base font-semibold text-red-600 transition-colors hover:bg-red-600 hover:text-white"
+                            className="flex w-full items-center justify-center rounded-lg bg-red-50 px-4 py-3 text-base font-semibold text-[#b4463c] transition-colors hover:bg-red-600 hover:text-white"
                         >
                             <Bug className="mr-2 h-5 w-5" />
                             Report an Issue

@@ -21,6 +21,12 @@ export default function InputField({
     idPrefix = "field",
 }) {
     const inputId = `${idPrefix}-${name}`;
+    const errorId = `${inputId}-error`;
+    const hintId = `${inputId}-hint`;
+    const describedBy =
+        [error ? errorId : null, !error && hint ? hintId : null]
+            .filter(Boolean)
+            .join(" ") || undefined;
     return (
         <div className="w-full space-y-1.5">
             <label
@@ -31,7 +37,7 @@ export default function InputField({
             </label>
             <div className="relative flex items-center">
                 {Icon && (
-                    <div className="pointer-events-none absolute left-3.5 text-[#8a847a]">
+                    <div className="pointer-events-none absolute left-3.5 text-[#6b6257]">
                         <Icon size={18} strokeWidth={1.5} />
                     </div>
                 )}
@@ -42,6 +48,10 @@ export default function InputField({
                     placeholder={placeholder}
                     value={value}
                     onChange={onChange}
+                    required
+                    aria-required="true"
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={describedBy}
                     className={
                         "pl-field " +
                         (error ? "pl-field-error " : "") +
@@ -50,12 +60,19 @@ export default function InputField({
                 />
             </div>
             {error ? (
-                <p className="mt-1 flex items-center gap-1 text-[12px] text-[#b4463c]">
+                <p
+                    id={errorId}
+                    className="mt-1 flex items-center gap-1 text-[12px] text-[#b4463c]"
+                >
                     <AlertCircle className="h-3 w-3" />
                     {error}
                 </p>
             ) : (
-                hint && <p className="text-[12px] text-[#8a847a]">{hint}</p>
+                hint && (
+                    <p id={hintId} className="text-[12px] text-[#6b6257]">
+                        {hint}
+                    </p>
+                )
             )}
         </div>
     );

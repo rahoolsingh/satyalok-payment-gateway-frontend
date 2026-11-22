@@ -234,7 +234,10 @@ function Payment() {
         <div className="flex min-h-screen lg:h-screen w-full flex-col overflow-x-hidden bg-[#f7f4ee] font-sans selection:bg-[#e3d9ca] selection:text-[#1f1b16]">
             <Header />
 
-            <div className="flex flex-grow flex-col lg:flex-row lg:h-[calc(100vh-80px)] lg:overflow-hidden relative">
+            <main
+                id="donation-main"
+                className="relative flex flex-grow flex-col lg:h-[calc(100vh-80px)] lg:flex-row lg:overflow-hidden"
+            >
                 
                 {/* LEFT SECTION */}
                 <div className="relative order-1 h-72 lg:h-full lg:w-5/12 xl:w-1/2 overflow-hidden bg-[#1f1b16] flex-shrink-0">
@@ -266,7 +269,7 @@ function Payment() {
                                     >
                                         <div className="flex items-center gap-2 mb-2">
                                             <Sparkles className="text-[#8fc7a8] h-4 w-4" />
-                                            <h4 className="text-[11px] font-medium text-[#8fc7a8]">{fact.title}</h4>
+                                            <p className="text-[11px] font-medium text-[#8fc7a8]">{fact.title}</p>
                                         </div>
                                         <p className="text-white text-lg font-medium leading-relaxed">{fact.desc}</p>
                                     </div>
@@ -320,7 +323,7 @@ function Payment() {
                             <div className="space-y-4">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="pl-mono w-6 text-[11px] text-[#8a847a]">01</span>
+                                        <span className="pl-mono w-6 text-[11px] text-[#6b6257]">01</span>
                                         <h3 className="text-[15px] font-medium text-[#1f1b16]">Contribution Amount</h3>
                                     </div>
                                     <p className="text-sm text-[#5e554a] mb-4 ml-8">Select an amount or enter any custom amount.</p>
@@ -348,10 +351,12 @@ function Payment() {
                                 </div>
 
                                 <div className="relative flex items-center mt-2">
-                                    <span className="absolute left-4 text-[#8a847a] font-medium text-lg">₹</span>
+                                    <span className="absolute left-4 text-[#6b6257] font-medium text-lg">₹</span>
                                     <input
                                         type="number"
                                         name="amount"
+                                        aria-label="Donation amount in rupees"
+                                        required
                                         value={formData.amount}
                                         onChange={handleChange}
                                         placeholder="Enter custom amount"
@@ -404,7 +409,7 @@ function Payment() {
                             {/* SECTION 2: Tax Exemption */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="pl-mono w-6 text-[11px] text-[#8a847a]">02</span>
+                                    <span className="pl-mono w-6 text-[11px] text-[#6b6257]">02</span>
                                     <h3 className="text-[15px] font-medium text-[#1f1b16]">Tax Benefits</h3>
                                 </div>
                                 
@@ -420,7 +425,7 @@ function Payment() {
                                                         e.stopPropagation();
                                                         setShow80GInfo(!show80GInfo);
                                                     }}
-                                                    className={`p-1 rounded-full transition-colors ${show80GInfo ? 'text-[#0f5fa5] bg-[#efe9df]' : 'text-[#8a847a] hover:text-[#0f5fa5] hover:bg-[#efe9df]'}`}
+                                                    className={`p-1 rounded-full transition-colors ${show80GInfo ? 'text-[#0f5fa5] bg-[#efe9df]' : 'text-[#6b6257] hover:text-[#0f5fa5] hover:bg-[#efe9df]'}`}
                                                     title="What is 80G?"
                                                 >
                                                     <Info size={16} />
@@ -468,7 +473,7 @@ function Payment() {
                             {/* SECTION 3: Personal Details */}
                             <div className="space-y-5">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="pl-mono w-6 text-[11px] text-[#8a847a]">03</span>
+                                    <span className="pl-mono w-6 text-[11px] text-[#6b6257]">03</span>
                                     <h3 className="text-[15px] font-medium text-[#1f1b16]">Your Details</h3>
                                 </div>
                                 <InputField {...fieldsConfig[0]} value={formData.name} onChange={handleChange} error={errors.name} />
@@ -483,7 +488,7 @@ function Payment() {
                                     <div className="h-px w-full bg-[#efe9df]"></div>
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="pl-mono w-6 text-[11px] text-[#8a847a]">04</span>
+                                            <span className="pl-mono w-6 text-[11px] text-[#6b6257]">04</span>
                                             <h3 className="text-[15px] font-medium text-[#1f1b16]">Payment Method</h3>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -532,7 +537,7 @@ function Payment() {
                                     {!loading && <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />}
                                 </button>
 
-                                <div className="mt-6 flex justify-center gap-6 text-[11px] text-[#8a847a]">
+                                <div className="mt-6 flex justify-center gap-6 text-[11px] text-[#6b6257]">
                                     <div className="flex items-center gap-1.5"><Lock size={12} /> SSL secured</div>
                                     <div className="w-1 h-1 rounded-full bg-[#c9bfae]"></div>
                                     <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> {provider === "razorpay" ? "Razorpay" : "PhonePe"}</div>
@@ -545,8 +550,8 @@ function Payment() {
                         )}
 
                         {/* Footer & Status */}
-                        <div className="mt-12 border-t border-[rgba(31,27,22,0.09)] pt-6 text-center">
-                            <p className="text-xs text-[#8a847a]">
+                        <footer className="mt-12 border-t border-[rgba(31,27,22,0.09)] pt-6 text-center">
+                            <p className="text-xs text-[#6b6257]">
                                 By donating, you agree to our <a href="/terms" className="underline decoration-[rgba(31,27,22,0.2)] underline-offset-2 hover:text-[#5e554a]">Terms</a> and <a href="/privacy" className="underline decoration-[rgba(31,27,22,0.2)] underline-offset-2 hover:text-[#5e554a]">Privacy Policy</a>.
                             </p>
 
@@ -564,10 +569,10 @@ function Payment() {
                                     System {serverStatus === 'checking' ? 'Connecting' : serverStatus === 'alive' ? `Online${serverVersion ? ` · v${serverVersion}` : ""}` : 'Offline'}
                                 </span>
                             </div>
-                        </div>
+                        </footer>
                     </div>
                 </div>
-            </div>
+            </main>
 
             {errorMessage && <ErrorCard message={errorMessage} setMessage={setErrorMessage} />}
         </div>

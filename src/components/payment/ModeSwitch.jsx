@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import PropTypes from "prop-types";
 import { Heart, Repeat } from "lucide-react";
 
@@ -18,6 +19,29 @@ export default function ModeSwitch({ value, onChange }) {
         0,
         OPTIONS.findIndex((option) => option.id === value),
     );
+    const buttons = useRef([]);
+
+    const move = (next) => {
+        const bounded = (next + OPTIONS.length) % OPTIONS.length;
+        onChange(OPTIONS[bounded].id);
+        buttons.current[bounded]?.focus();
+    };
+
+    const onKeyDown = (event) => {
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+            event.preventDefault();
+            move(index + 1);
+        } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+            event.preventDefault();
+            move(index - 1);
+        } else if (event.key === "Home") {
+            event.preventDefault();
+            move(0);
+        } else if (event.key === "End") {
+            event.preventDefault();
+            move(OPTIONS.length - 1);
+        }
+    };
 
     return (
         <div
@@ -40,18 +64,23 @@ export default function ModeSwitch({ value, onChange }) {
                             type="button"
                             role="tab"
                             aria-selected={active}
+                            tabIndex={active ? 0 : -1}
+                            ref={(el) => {
+                                buttons.current[OPTIONS.findIndex((o) => o.id === id)] = el;
+                            }}
+                            onKeyDown={onKeyDown}
                             onClick={() => onChange(id)}
                             className={`relative z-10 flex items-center justify-center gap-2 rounded-[8px] py-2.5 text-sm transition-colors duration-200 ${
                                 active
                                     ? "font-medium text-[#1f1b16]"
-                                    : "font-normal text-[#8a847a] hover:text-[#5e554a]"
+                                    : "font-normal text-[#6b6257] hover:text-[#5e554a]"
                             }`}
                         >
                             <Icon
                                 size={16}
                                 strokeWidth={1.5}
                                 className={
-                                    active ? "text-[#0f5fa5]" : "text-[#8a847a]"
+                                    active ? "text-[#0f5fa5]" : "text-[#6b6257]"
                                 }
                             />
                             {label}

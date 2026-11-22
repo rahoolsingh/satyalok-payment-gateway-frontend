@@ -220,7 +220,7 @@ function DonorPortal() {
         <div className="pl-page min-h-screen">
             <Header />
 
-            <div className="mx-auto max-w-2xl px-6 py-16">
+            <main id="pledge-portal-main" className="mx-auto max-w-2xl px-6 py-16">
                 <div className="flex items-start justify-between gap-6">
                     <div>
                         <p className="pl-mono pl-muted text-[12px]">{pledge.pledgeRef}</p>
@@ -423,7 +423,7 @@ function DonorPortal() {
                 >
                     Satyalok donations
                 </Link>
-            </div>
+            </main>
         </div>
     );
 }

@@ -419,6 +419,7 @@ function Pledge() {
         <div className="pl-page min-h-screen">
             <Header />
 
+            <main id="pledge-main">
             <div className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
                 <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-20">
                     <div className="lg:sticky lg:top-24 lg:self-start">
@@ -803,6 +804,8 @@ function Pledge() {
                     </form>
                 </div>
             </div>
+
+            </main>
 
             {errorMessage && (
                 <ErrorCard message={errorMessage} setMessage={setErrorMessage} />

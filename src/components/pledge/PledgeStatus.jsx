@@ -156,6 +156,7 @@ function PledgeStatus() {
         <div className="pl-page min-h-screen">
             <Header />
 
+            <main id="pledge-status-main">
             <div className="mx-auto max-w-lg px-6 py-16">
                 <Link
                     to="/"
@@ -273,6 +274,7 @@ function PledgeStatus() {
                     </p>
                 )}
             </div>
+            </main>
         </div>
     );
 }

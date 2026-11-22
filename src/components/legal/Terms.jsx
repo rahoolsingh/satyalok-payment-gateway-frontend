@@ -12,7 +12,7 @@ export default function Terms() {
         <div className="pl-page min-h-screen">
             <Header />
 
-            <article className="mx-auto max-w-2xl px-6 py-14">
+            <main id="terms-main" className="mx-auto max-w-2xl px-6 py-14">
                 <Link
                     to="/"
                     className="pl-mono pl-muted inline-flex items-center gap-1.5 text-[12px] hover:underline"
@@ -175,7 +175,7 @@ export default function Terms() {
                         </p>
                     </section>
                 </div>
-            </article>
+            </main>
         </div>
     );
 }

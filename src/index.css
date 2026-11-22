@@ -1,6 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #0f5fa5;
+    outline-offset: 2px;
+  }
+}
 /* ─────────────────────────────────────────────────────────────
    Pledge surfaces — "paper and ink".
    Scoped with pl- so the existing one-time donation page is untouched.
@@ -34,7 +41,7 @@
   }
 
   .pl-muted {
-    color: #8a847a;
+    color: #6b6257;
   }
 
   /* Accent as ink only: darkened so it clears 4.5:1 on paper. */
@@ -78,7 +85,7 @@
   }
 
   .pl-btn-primary:disabled {
-    background-color: #a89e92;
+    background-color: #7b7266;
     cursor: not-allowed;
   }
 
@@ -122,7 +129,7 @@
   }
 
   .pl-field::placeholder {
-    color: #a89e92;
+    color: #7b7266;
   }
 
   .pl-field:focus {
