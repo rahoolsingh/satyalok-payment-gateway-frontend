@@ -5,8 +5,17 @@ import { ArrowLeft, RefreshCw } from "lucide-react";
 import Header from "../header/Header";
 import { fetchPledgeStatus } from "./pledgeApi";
 
-const POLL_INTERVAL_MS = 4000;
-const MAX_POLLS = 45;
+const POLL_INTERVAL_MS = 3000;
+// Keep polling for three minutes at full speed, then every 15 seconds. The page
+// never gives up while the mandate is still pending.
+const FAST_POLLS = 60;
+const SLOW_INTERVAL_MS = 15000;
+
+const formatElapsed = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${String(s).padStart(2, "0")}`;
+};
 
 const currency = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -76,6 +85,16 @@ function PledgeStatus() {
     const [status, setStatus] = useState(null);
     const [error, setError] = useState("");
     const [pollCount, setPollCount] = useState(0);
+    const [checking, setChecking] = useState(false);
+    const [startedAt] = useState(() => Date.now());
+    const [now, setNow] = useState(() => Date.now());
+
+    useEffect(() => {
+        const timer = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const elapsed = Math.max(0, Math.round((now - startedAt) / 1000));
 
     const load = useCallback(async () => {
         if (!pledgeRef) return;
@@ -96,12 +115,15 @@ function PledgeStatus() {
     useEffect(() => {
         if (!pledgeRef) return undefined;
         if (status && status.status !== "PENDING_AUTH") return undefined;
-        if (pollCount >= MAX_POLLS) return undefined;
 
+        const slow = pollCount >= FAST_POLLS;
         const timer = setTimeout(() => {
-            setPollCount((count) => count + 1);
-            load();
-        }, POLL_INTERVAL_MS);
+            setChecking(true);
+            load().finally(() => {
+                setChecking(false);
+                setPollCount((count) => count + 1);
+            });
+        }, slow ? SLOW_INTERVAL_MS : POLL_INTERVAL_MS);
 
         return () => clearTimeout(timer);
     }, [pledgeRef, status, pollCount, load]);
@@ -162,7 +184,7 @@ function PledgeStatus() {
                         <div className="mt-3">
                             {waiting && (
                                 <Status tone="waiting">
-                                    Waiting for your approval. This page updates on its own.
+                                    Waiting for your approval. This page keeps checking on its own.
                                 </Status>
                             )}
                             {isActive && (
@@ -196,25 +218,40 @@ function PledgeStatus() {
 
                     <div className="pl-perf pl-perf-notch relative mt-6 flex items-center justify-between px-6 py-3">
                         <p className="pl-mono pl-muted text-[11px]">
-                            {waiting ? "Waiting for approval" : "Receipt emailed"}
+                            {waiting
+                                ? `Waiting ${formatElapsed(elapsed)}`
+                                : "Receipt emailed"}
                         </p>
                         <button
                             type="button"
                             onClick={() => {
-                                setPollCount(0);
-                                load();
+                                setChecking(true);
+                                load().finally(() => setChecking(false));
                             }}
-                            className="pl-muted inline-flex items-center gap-1.5 text-[12px] hover:text-[#1f1b16]"
+                            disabled={checking}
+                            className="pl-muted inline-flex items-center gap-1.5 text-[12px] hover:text-[#1f1b16] disabled:opacity-50"
                         >
-                            <RefreshCw size={13} strokeWidth={1.5} /> Refresh
+                            <RefreshCw
+                                size={13}
+                                strokeWidth={1.5}
+                                className={checking ? "animate-spin" : ""}
+                            />
+                            {checking ? "Checking" : "Check again"}
                         </button>
                     </div>
                 </div>
 
-                {waiting && pollCount >= MAX_POLLS && (
+                {waiting && pollCount >= FAST_POLLS && (
                     <p className="pl-secondary mt-4 text-[13px] leading-6">
-                        Still waiting. If you approved it, the confirmation email is
-                        already on its way. Otherwise start again with a different UPI ID.
+                        Taking longer than usual. If you approved the mandate, the
+                        confirmation email is on its way. You can keep waiting here, or{" "}
+                        <Link
+                            to="/pledge"
+                            className="pl-accent underline underline-offset-2"
+                        >
+                            start again with a different UPI ID
+                        </Link>
+                        .
                     </p>
                 )}
 
