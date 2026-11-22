@@ -228,20 +228,35 @@ function Payment() {
     }, []);
 
     if (isMaintainanceMode) return <Maintainance />;
-    if (loading) return <div className="flex h-screen items-center justify-center bg-[#efe9df]"><Loading /></div>;
+    if (loading)
+        return (
+            <div
+                role="status"
+                aria-live="polite"
+                className="flex h-screen items-center justify-center bg-[#efe9df]"
+            >
+                <Loading />
+            </div>
+        );
 
     return (
         <div className="flex min-h-screen lg:h-screen w-full flex-col overflow-x-hidden bg-[#f7f4ee] font-sans selection:bg-[#e3d9ca] selection:text-[#1f1b16]">
             <Header />
-
             <main
                 id="donation-main"
+                tabIndex={-1}
                 className="relative flex flex-grow flex-col lg:h-[calc(100vh-80px)] lg:flex-row lg:overflow-hidden"
             >
+                <a
+                    href="#donation-main"
+                    className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-[#1f1b16] focus:px-4 focus:py-2 focus:text-sm focus:text-[#fdfbf7]"
+                >
+                    Skip to donation form
+                </a>
                 
                 {/* LEFT SECTION */}
                 <div className="relative order-1 h-72 lg:h-full lg:w-5/12 xl:w-1/2 overflow-hidden bg-[#1f1b16] flex-shrink-0">
-                    <img src={bgImage} alt="Donate Background" className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-overlay transition-transform duration-[20s] hover:scale-110" />
+                    <img src={bgImage} alt="" className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-overlay transition-transform duration-[20s] hover:scale-110" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1f1b16] via-[#1f1b16]/60 to-transparent lg:bg-gradient-to-r lg:from-[#1f1b16] lg:via-[#1f1b16]/80 lg:to-transparent" />
 
                     <div className="absolute inset-0 flex flex-col justify-between p-8 lg:p-12 xl:p-16 z-10">
