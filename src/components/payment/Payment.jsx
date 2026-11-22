@@ -7,7 +7,6 @@ import MonthlyPledgeForm from "./MonthlyPledgeForm";
 import {
     Heart,
     Lock,
-    AlertCircle,
     Info,
     CreditCard,
     Loader2,
@@ -26,42 +25,9 @@ import Loading from "../loading/Loading";
 import ErrorCard from "../error/ErrorCard";
 import { isMaintainanceMode } from "../../../config";
 import Maintainance from "../maintainance/Maintainance";
+import InputField from "./InputField";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-
-// Refined, Modern Input Field
-const InputField = ({ label, name, type, placeholder, value, onChange, error, icon: Icon }) => (
-    <div className="space-y-1.5 w-full">
-        <label className="text-sm font-semibold text-slate-700">
-            {label}
-        </label>
-        <div className="relative flex items-center">
-            {Icon && (
-                <div className="absolute left-3.5 text-slate-400 pointer-events-none">
-                    <Icon size={18} />
-                </div>
-            )}
-            <input
-                type={type}
-                name={name}
-                placeholder={placeholder}
-                value={value}
-                onChange={onChange}
-                className={`w-full rounded-xl border-0 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none ring-1 transition-all placeholder:text-slate-400 placeholder:font-normal focus:bg-white focus:ring-2 ${
-                    error
-                        ? "ring-red-300 focus:ring-red-500 bg-red-50/50"
-                        : "ring-slate-200 focus:ring-blue-600 hover:ring-slate-300"
-                } ${Icon ? "pl-11" : ""}`}
-            />
-        </div>
-        {error && (
-            <p className="flex items-center text-xs font-medium text-red-600 mt-1">
-                <AlertCircle className="h-3 w-3 mr-1" />
-                {error}
-            </p>
-        )}
-    </div>
-);
 
 const impactFacts = [
     { title: "Empowering Lives", desc: "500+ students have gained access to quality education through Satyalok." },
@@ -321,11 +287,7 @@ function Payment() {
                 </div>
 
                 {/* RIGHT SECTION */}
-                <div
-                    className={`order-2 flex w-full flex-col lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto ${
-                        mode === "monthly" ? "bg-[#f7f4ee]" : "bg-white"
-                    }`}
-                >
+                <div className="order-2 flex w-full flex-col bg-white lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto">
                     <div className="mx-auto w-full max-w-2xl flex-grow px-6 py-10 lg:px-12 lg:py-16">
 
                         <div className="mb-8 border-b border-slate-100 pb-6">

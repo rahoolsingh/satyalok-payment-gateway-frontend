@@ -1,7 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { ArrowRight, Loader2 } from "lucide-react";
+import {
+    AlertCircle,
+    ArrowRight,
+    CheckCircle2,
+    CreditCard,
+    Info,
+    Loader2,
+    Lock,
+    Mail,
+    Phone,
+    Sparkles,
+    User,
+} from "lucide-react";
+import InputField from "./InputField";
+import ErrorCard from "../error/ErrorCard";
 import {
     createPledge,
     extractApiError,
@@ -11,11 +25,12 @@ import {
 import { openRazorpayCheckout } from "../../utils/razorpayCheckout";
 
 /**
- * Compact monthly giving form for the donation page switch.
+ * Monthly giving form for the donation page switch.
  *
- * Same rules as the full /pledge page (server resolves the amount, idempotency
- * key, Razorpay checkout, status hand-off) but scoped to the few decisions a
- * donor makes here: how much, who they are, and consent.
+ * Deliberately built from the same parts as the one-time form — same input
+ * component, same numbered section headers, same amount buttons, same impact
+ * card, same submit button — so switching modes changes the fields, not the
+ * design language.
  */
 
 const currency = (value) =>
@@ -25,55 +40,39 @@ const currency = (value) =>
         maximumFractionDigits: 0,
     }).format(Number(value) || 0);
 
-const Field = ({ label, name, type, placeholder, value, onChange, error, hint }) => (
-    <div>
-        <label
-            htmlFor={`monthly-${name}`}
-            className="pl-secondary mb-1.5 block text-[13px] font-medium"
-        >
-            {label}
-        </label>
-        <input
-            id={`monthly-${name}`}
-            name={name}
-            type={type}
-            value={value}
-            placeholder={placeholder}
-            onChange={onChange}
-            autoComplete="off"
-            aria-invalid={Boolean(error)}
-            className={"pl-field " + (error ? "pl-field-error" : "")}
-        />
-        {error ? (
-            <p className="mt-1.5 text-[12px] text-[#b4463c]">{error}</p>
-        ) : (
-            hint && <p className="pl-muted mt-1.5 text-[12px]">{hint}</p>
-        )}
+const SectionTitle = ({ step, title }) => (
+    <div className="mb-1 flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+            {step}
+        </span>
+        <h3 className="text-base font-bold text-slate-900">{title}</h3>
     </div>
 );
 
 const ComingSoon = ({ plans, onSwitchBack }) => (
-    <div className="pl-card p-6 sm:p-8">
-        <p className="pl-mono pl-muted text-[12px]">Monthly giving</p>
-        <h3 className="pl-display mt-2 text-[26px] leading-[1.15]">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+        <p className="text-xs font-semibold tracking-wide text-slate-400">
+            Monthly giving
+        </p>
+        <h3 className="mt-2 text-xl font-bold text-slate-900">
             Monthly giving is coming soon
         </h3>
-        <p className="pl-secondary mt-3 text-[15px] leading-6">
+        <p className="mt-3 text-sm leading-6 text-slate-500">
             We are finishing the bank approvals for automatic monthly debits. A
             one-time donation reaches the same children today.
         </p>
 
         {plans.length > 0 && (
-            <ul className="pl-hairline mt-6 divide-y border-t">
+            <ul className="mt-6 divide-y divide-slate-100 border-t border-slate-100">
                 {plans.map((plan) => (
                     <li
                         key={plan.id}
                         className="flex items-baseline justify-between py-3"
                     >
-                        <span className="pl-tabular text-[14px]">
+                        <span className="text-sm font-semibold tabular-nums text-slate-800">
                             {currency(plan.amount)} a month
                         </span>
-                        <span className="pl-mono pl-muted text-[11px]">
+                        <span className="text-xs text-slate-400">
                             coming soon
                         </span>
                     </li>
@@ -84,10 +83,10 @@ const ComingSoon = ({ plans, onSwitchBack }) => (
         <button
             type="button"
             onClick={onSwitchBack}
-            className="pl-btn-primary mt-6"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
             Give once instead
-            <ArrowRight size={16} strokeWidth={1.5} />
+            <ArrowRight className="h-4 w-4" />
         </button>
     </div>
 );
@@ -106,10 +105,11 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
         pan: "",
     });
     const [want80G, setWant80G] = useState(false);
+    const [show80GInfo, setShow80GInfo] = useState(false);
     const [consent, setConsent] = useState(false);
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
     const idempotencyKey = useRef(newIdempotencyKey());
 
     useEffect(() => {
@@ -130,7 +130,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                 }
             })
             .catch(() => {
-                setError(
+                setErrorMessage(
                     "The monthly amounts could not be loaded. Refresh the page to try again.",
                 );
             });
@@ -138,36 +138,39 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
     const selectedPlan = plans.find((plan) => plan.id === planId) || null;
     const amount =
-        planId === "custom" ? Number(customAmount) || 0 : selectedPlan?.amount || 0;
+        planId === "custom"
+            ? Number(customAmount) || 0
+            : selectedPlan?.amount || 0;
+    const providerName =
+        capability?.provider === "razorpay" ? "Razorpay" : "PhonePe";
 
     const handleChange = (event) => {
         const { name, value } = event.target;
         setForm((prev) => ({ ...prev, [name]: value }));
-        setErrors((prev) => ({ ...prev, [name]: undefined }));
+        setErrors((prev) => ({ ...prev, [name]: null }));
     };
 
     const validate = () => {
         const next = {};
 
-        if (form.name.trim().length < 2) next.name = "Enter your full name";
-
+        if (form.name.trim().length < 2) next.name = "Name is required";
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
             next.email = "Enter a valid email address";
         }
-
         if (!/^[6-9]\d{9}$/.test(form.phone.replace(/\D/g, "").slice(-10))) {
-            next.phone = "Enter a 10 digit mobile number";
+            next.phone = "Must be 10 digits";
         }
-
         if (
             capability?.requiresVpa !== false &&
             !/^[a-zA-Z0-9.\-_]{2,}@[a-zA-Z]{2,}$/.test(form.vpa.trim())
         ) {
-            next.vpa = "Enter your UPI ID, for example yourname@okhdfcbank";
+            next.vpa = "Enter your UPI ID, like yourname@okhdfcbank";
         }
-
-        if (want80G && !/^[A-Z]{5}\d{4}[A-Z]$/.test(form.pan.trim().toUpperCase())) {
-            next.pan = "PAN looks like ABCDE1234F";
+        if (
+            want80G &&
+            !/^[A-Z]{5}\d{4}[A-Z]$/.test(form.pan.trim().toUpperCase())
+        ) {
+            next.pan = "Invalid PAN format";
         }
 
         const min = rules?.minAmount || 100;
@@ -179,7 +182,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
             next.amount = `Maximum is ${currency(max)} a month`;
         }
 
-        if (!consent) next.consent = "Tick the authorisation to continue";
+        if (!consent) next.consent = "Please accept the authorisation";
 
         setErrors(next);
         return Object.keys(next).length === 0;
@@ -191,7 +194,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
         if (!validate()) return;
 
         setLoading(true);
-        setError("");
+        setErrorMessage("");
 
         try {
             const response = await createPledge({
@@ -213,7 +216,10 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
             const authorization = response.data.authorization;
             const pledge = response.data.pledge;
 
-            if (authorization.mode === "RAZORPAY_CHECKOUT" && authorization.razorpay) {
+            if (
+                authorization.mode === "RAZORPAY_CHECKOUT" &&
+                authorization.razorpay
+            ) {
                 const rzp = authorization.razorpay;
 
                 setLoading(false);
@@ -235,7 +241,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                     },
                     onDismiss: () => setLoading(false),
                     onFailed: (response) => {
-                        setError(
+                        setErrorMessage(
                             response?.error?.description ||
                                 "The mandate could not be authorised. Please try again.",
                         );
@@ -254,7 +260,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
             window.location.href =
                 "/pledge/status?ref=" + encodeURIComponent(pledge.pledgeRef);
         } catch (err) {
-            setError(extractApiError(err));
+            setErrorMessage(extractApiError(err));
         } finally {
             setLoading(false);
         }
@@ -262,33 +268,11 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
     if (!capability) {
         return (
-            <div className="pl-card p-6 sm:p-8">
-                {error ? (
-                    <>
-                        <p
-                            role="alert"
-                            className="text-[13px] leading-5 text-[#b4463c]"
-                        >
-                            {error}
-                        </p>
-                        <button
-                            type="button"
-                            onClick={() => window.location.reload()}
-                            className="pl-btn-quiet mt-4"
-                        >
-                            Try again
-                        </button>
-                    </>
-                ) : (
-                    <p className="pl-secondary flex items-center gap-2 text-[14px]">
-                        <Loader2
-                            size={16}
-                            strokeWidth={1.5}
-                            className="animate-spin"
-                        />
-                        Loading monthly amounts
-                    </p>
-                )}
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+                <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading monthly amounts
+                </div>
             </div>
         );
     }
@@ -302,81 +286,81 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
         );
     }
 
-    const providerName =
-        capability?.provider === "razorpay" ? "Razorpay" : "PhonePe";
-
     return (
-        <form onSubmit={handleSubmit} className="pl-card p-6 sm:p-8" noValidate>
-            <div className="flex items-baseline justify-between gap-3">
-                <h3 className="text-[16px] font-medium">Set up a monthly pledge</h3>
-                <span className="pl-mono pl-muted text-[11px]">
-                    via {providerName}
-                </span>
-            </div>
-            <p className="pl-secondary mt-1 text-[13px] leading-5">
-                One mandate, debited on the same date each month. You approve it
-                with your bank at the end.
-            </p>
+        <>
+            <form onSubmit={handleSubmit} className="space-y-10" noValidate>
+                {/* SECTION 1: Monthly amount */}
+                <div className="space-y-4">
+                    <div>
+                        <SectionTitle step={1} title="Monthly amount" />
+                        <p className="mb-4 ml-8 text-sm text-slate-500">
+                            The same amount is debited on the same date each
+                            month. You can change or cancel any time.
+                        </p>
+                    </div>
 
-            <fieldset className="mt-6">
-                <legend className="pl-secondary mb-2 text-[13px] font-medium">
-                    Amount each month
-                </legend>
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        {plans.map((plan) => {
+                            const selected = plan.id === planId;
 
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {plans.map((plan) => {
-                        const selected = plan.id === planId;
-
-                        return (
-                            <button
-                                key={plan.id}
-                                type="button"
-                                onClick={() => {
-                                    setPlanId(plan.id);
-                                    setCustomAmount(String(plan.amount));
-                                    setErrors((prev) => ({ ...prev, amount: undefined }));
-                                }}
-                                aria-pressed={selected}
-                                className={
-                                    "rounded-[10px] border px-3 py-3 text-left transition-colors " +
-                                    (selected
-                                        ? "border-[#1f1b16] bg-[#f2ece3]"
-                                        : "border-[rgba(31,27,22,0.12)] bg-white hover:bg-[#faf7f1]")
-                                }
-                            >
-                                <span className="pl-tabular block text-[18px] font-medium">
+                            return (
+                                <button
+                                    key={plan.id}
+                                    type="button"
+                                    aria-pressed={selected}
+                                    onClick={() => {
+                                        setPlanId(plan.id);
+                                        setCustomAmount(String(plan.amount));
+                                        setErrors((prev) => ({
+                                            ...prev,
+                                            amount: null,
+                                        }));
+                                    }}
+                                    className={`flex items-baseline justify-center gap-1 rounded-xl py-3 text-sm font-bold transition-all ${
+                                        selected
+                                            ? "scale-[1.02] bg-slate-900 text-white shadow-md"
+                                            : "border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-slate-100"
+                                    }`}
+                                >
                                     {currency(plan.amount)}
-                                </span>
-                                <span className="pl-muted block text-[11px]">
-                                    per month
-                                </span>
-                            </button>
-                        );
-                    })}
+                                    <span
+                                        className={`text-[10px] font-medium ${
+                                            selected
+                                                ? "text-slate-300"
+                                                : "text-slate-400"
+                                        }`}
+                                    >
+                                        /mo
+                                    </span>
+                                </button>
+                            );
+                        })}
 
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setPlanId("custom");
-                            setErrors((prev) => ({ ...prev, amount: undefined }));
-                        }}
-                        aria-pressed={planId === "custom"}
-                        className={
-                            "rounded-[10px] border px-3 py-3 text-left transition-colors " +
-                            (planId === "custom"
-                                ? "border-[#1f1b16] bg-[#f2ece3]"
-                                : "border-[rgba(31,27,22,0.12)] bg-white hover:bg-[#faf7f1]")
-                        }
-                    >
-                        <span className="block text-[14px] font-medium">Custom</span>
-                        <span className="pl-muted block text-[11px]">any amount</span>
-                    </button>
-                </div>
+                        <button
+                            type="button"
+                            aria-pressed={planId === "custom"}
+                            onClick={() => {
+                                setPlanId("custom");
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    amount: null,
+                                }));
+                            }}
+                            className={`rounded-xl py-3 text-sm font-bold transition-all ${
+                                planId === "custom"
+                                    ? "scale-[1.02] bg-slate-900 text-white shadow-md"
+                                    : "border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-slate-100"
+                            }`}
+                        >
+                            Custom
+                        </button>
+                    </div>
 
-                {planId === "custom" && (
-                    <div className="mt-2 rounded-[10px] border border-[rgba(31,27,22,0.12)] bg-white p-3">
-                        <div className="flex items-center gap-2">
-                            <span className="pl-mono pl-muted text-[13px]">INR</span>
+                    {planId === "custom" && (
+                        <div className="relative flex items-center">
+                            <span className="absolute left-4 text-lg font-medium text-slate-400">
+                                ₹
+                            </span>
                             <input
                                 type="number"
                                 inputMode="numeric"
@@ -389,224 +373,305 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                     setCustomAmount(event.target.value);
                                     setErrors((prev) => ({
                                         ...prev,
-                                        amount: undefined,
+                                        amount: null,
                                     }));
                                 }}
-                                className="pl-tabular w-full border-0 bg-transparent p-0 text-[20px] font-medium outline-none"
+                                className={`w-full rounded-xl bg-white px-4 py-4 pl-9 text-lg font-bold text-slate-900 outline-none ring-1 transition-all focus:ring-2 ${
+                                    errors.amount
+                                        ? "bg-red-50 ring-red-300 focus:ring-red-500"
+                                        : "ring-slate-200 hover:ring-slate-300 focus:ring-blue-600"
+                                }`}
                             />
                         </div>
-                        <p className="pl-muted mt-1 text-[12px]">
-                            {"Between " +
-                                currency(rules ? rules.minAmount : 100) +
-                                " and " +
-                                currency(rules ? rules.maxAmount : 10000) +
-                                " a month"}
+                    )}
+
+                    {planId === "custom" && (
+                        <p className="text-xs text-slate-400">
+                            {`Between ${currency(
+                                rules ? rules.minAmount : 100,
+                            )} and ${currency(
+                                rules ? rules.maxAmount : 10000,
+                            )} a month`}
                         </p>
+                    )}
+
+                    {errors.amount && (
+                        <p className="text-xs font-medium text-red-600">
+                            {errors.amount}
+                        </p>
+                    )}
+
+                    <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
+                        <div className="flex items-start gap-3">
+                            <div className="mt-0.5 shrink-0 rounded-lg bg-white p-1.5 text-emerald-600 shadow-sm">
+                                <Sparkles size={16} />
+                            </div>
+                            <div>
+                                <h4 className="mb-1 text-xs font-semibold text-emerald-800">
+                                    Your impact
+                                </h4>
+                                <p className="text-sm font-medium leading-snug text-emerald-900">
+                                    {selectedPlan?.impact ||
+                                        "Enter an amount to see the impact."}
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                )}
+                </div>
 
-                {errors.amount && (
-                    <p className="mt-2 text-[12px] text-[#b4463c]">
-                        {errors.amount}
-                    </p>
-                )}
+                <div className="h-px w-full bg-slate-100"></div>
 
-                {selectedPlan?.impact && (
-                    <p className="pl-muted mt-2 text-[12px]">
-                        {selectedPlan.impact}
-                    </p>
-                )}
-            </fieldset>
+                {/* SECTION 2: Tax benefits */}
+                <div className="space-y-4">
+                    <SectionTitle step={2} title="Tax benefits" />
 
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                    <Field
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition-colors hover:border-slate-300">
+                        <div
+                            className="flex cursor-pointer items-center justify-between"
+                            onClick={() => setWant80G(!want80G)}
+                        >
+                            <div>
+                                <div className="flex items-center gap-1.5">
+                                    <p className="text-sm font-bold text-slate-900">
+                                        Claim 80G tax exemption?
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setShow80GInfo(!show80GInfo);
+                                        }}
+                                        className={`rounded-full p-1 transition-colors ${
+                                            show80GInfo
+                                                ? "bg-blue-100 text-blue-600"
+                                                : "text-slate-400 hover:bg-blue-50 hover:text-blue-600"
+                                        }`}
+                                        title="What is 80G?"
+                                    >
+                                        <Info size={16} />
+                                    </button>
+                                </div>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                    A certificate is attached to every monthly
+                                    receipt.
+                                </p>
+                            </div>
+                            <div
+                                className={`relative flex h-6 w-12 shrink-0 items-center rounded-full transition-colors ${
+                                    want80G ? "bg-blue-600" : "bg-slate-300"
+                                }`}
+                            >
+                                <div
+                                    className={`absolute h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-300 ${
+                                        want80G
+                                            ? "translate-x-7"
+                                            : "translate-x-1"
+                                    }`}
+                                />
+                            </div>
+                        </div>
+
+                        {show80GInfo && (
+                            <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/80 p-3 text-xs leading-relaxed text-blue-800">
+                                <strong>Section 80G</strong> allows you to claim
+                                tax deductions on donations made to approved
+                                charitable organizations like Satyalok. A tax
+                                receipt is generated automatically after each
+                                successful debit.
+                            </div>
+                        )}
+
+                        {want80G && (
+                            <div className="mt-4 px-1">
+                                <InputField
+                                    label="PAN number"
+                                    name="pan"
+                                    type="text"
+                                    placeholder="ABCDE1234F"
+                                    value={form.pan}
+                                    onChange={(e) => {
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            pan: e.target.value.toUpperCase(),
+                                        }));
+                                        setErrors((prev) => ({
+                                            ...prev,
+                                            pan: null,
+                                        }));
+                                    }}
+                                    error={errors.pan}
+                                    icon={CreditCard}
+                                />
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="h-px w-full bg-slate-100"></div>
+
+                {/* SECTION 3: Your details */}
+                <div className="space-y-5">
+                    <SectionTitle step={3} title="Your details" />
+
+                    <InputField
                         label="Full name"
                         name="name"
-                        placeholder="As printed on your PAN"
+                        type="text"
+                        placeholder="e.g. Rohan Kumar"
                         value={form.name}
                         onChange={handleChange}
                         error={errors.name}
+                        icon={User}
                     />
-                </div>
-                <Field
-                    label="Email"
-                    name="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={form.email}
-                    onChange={handleChange}
-                    error={errors.email}
-                />
-                <Field
-                    label="Mobile"
-                    name="phone"
-                    type="tel"
-                    placeholder="10 digit number"
-                    value={form.phone}
-                    onChange={handleChange}
-                    error={errors.phone}
-                />
-                {capability?.requiresVpa !== false && (
-                    <div className="sm:col-span-2">
-                        <Field
-                            label="UPI ID to debit"
-                            name="vpa"
-                            placeholder="yourname@okhdfcbank"
-                            value={form.vpa}
+
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                        <InputField
+                            label="Email address"
+                            name="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            value={form.email}
                             onChange={handleChange}
-                            error={errors.vpa}
-                            hint="Used only to send the mandate request to your bank"
+                            error={errors.email}
+                            icon={Mail}
+                        />
+                        <InputField
+                            label="Mobile number"
+                            name="phone"
+                            type="tel"
+                            placeholder="XXXXXXXXXX"
+                            value={form.phone}
+                            onChange={handleChange}
+                            error={errors.phone}
+                            icon={Phone}
                         />
                     </div>
-                )}
-            </div>
 
-            <label className="mt-5 flex cursor-pointer items-start gap-3">
-                <input
-                    type="checkbox"
-                    checked={want80G}
-                    onChange={(event) => setWant80G(event.target.checked)}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-[rgba(31,27,22,0.3)] accent-[#1376c8]"
-                />
-                <span>
-                    <span className="block text-[14px] font-medium">
-                        Add an 80G tax receipt
-                    </span>
-                    <span className="pl-muted block text-[12px] leading-5">
-                        Needs your PAN. The certificate is attached to every
-                        monthly receipt.
-                    </span>
-                </span>
-            </label>
-
-            {want80G && (
-                <div className="mt-3">
-                    <Field
-                        label="PAN"
-                        name="pan"
-                        placeholder="ABCDE1234F"
-                        value={form.pan}
-                        onChange={(event) => {
-                            const value = event.target.value.toUpperCase();
-                            setForm((prev) => ({ ...prev, pan: value }));
-                            setErrors((prev) => ({ ...prev, pan: undefined }));
-                        }}
-                        error={errors.pan}
-                        hint="Encrypted at rest, used only for the certificate"
-                    />
-                </div>
-            )}
-
-            <div className="mt-5 rounded-[10px] border border-[rgba(31,27,22,0.12)] bg-[#faf7f1] p-4">
-                <p className="pl-mono pl-muted text-[11px]">Authorisation</p>
-                <p className="pl-secondary mt-2 text-[13px] leading-[1.65]">
-                    I authorise Satyalok to debit{" "}
-                    <span className="pl-tabular font-medium">
-                        {currency(amount)}
-                    </span>{" "}
-                    every month, starting with the first debit when I approve
-                    this mandate, until I cancel. I will be told at least 24
-                    hours before each debit. One debit a month, for the same
-                    amount, for 5 years or until cancelled.
-                </p>
-            </div>
-
-            <label className="mt-3 flex cursor-pointer items-start gap-3">
-                <input
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(event) => {
-                        setConsent(event.target.checked);
-                        setErrors((prev) => ({ ...prev, consent: undefined }));
-                    }}
-                    className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-[rgba(31,27,22,0.3)] accent-[#1376c8]"
-                />
-                <span className="pl-secondary text-[12px] leading-5">
-                    I agree to the{" "}
-                    <Link
-                        to="/terms"
-                        className="pl-accent underline underline-offset-2"
-                    >
-                        terms
-                    </Link>{" "}
-                    and{" "}
-                    <Link
-                        to="/privacy"
-                        className="pl-accent underline underline-offset-2"
-                    >
-                        privacy policy
-                    </Link>
-                    , and to the recurring debit above.
-                </span>
-            </label>
-
-            {errors.consent && (
-                <p className="mt-1.5 text-[12px] text-[#b4463c]">
-                    {errors.consent}
-                </p>
-            )}
-
-            {error && (
-                <p
-                    role="alert"
-                    className="mt-4 rounded-[10px] border border-[#b4463c]/20 bg-[#b4463c]/5 px-3 py-2 text-[13px] leading-5 text-[#b4463c]"
-                >
-                    {error}
-                </p>
-            )}
-
-            <button
-                type="submit"
-                disabled={loading || !capability}
-                className="pl-btn-primary mt-5"
-            >
-                {loading ? (
-                    <>
-                        <Loader2
-                            size={16}
-                            strokeWidth={1.5}
-                            className="animate-spin"
+                    {capability?.requiresVpa !== false && (
+                        <InputField
+                            label="UPI ID to debit"
+                            name="vpa"
+                            type="text"
+                            placeholder="yourname@okhdfcbank"
+                        value={form.vpa}
+                        onChange={handleChange}
+                        error={errors.vpa}
+                        icon={CreditCard}
+                        hint="Used only to send the mandate request to your bank"
                         />
-                        Opening secure checkout
-                    </>
-                ) : (
-                    <>
-                        Continue with {currency(amount)} a month
-                        <ArrowRight size={16} strokeWidth={1.5} />
-                    </>
-                )}
-            </button>
+                    )}
+                </div>
 
-            <div className="pl-muted mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px]">
-                <span>Cancel any time</span>
-                <Link
-                    to="/pledge"
-                    className="pl-accent underline underline-offset-2"
-                >
-                    How monthly giving works
-                </Link>
-            </div>
-        </form>
+                {/* Authorisation */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                        Authorisation
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                        I authorise Satyalok to debit{" "}
+                        <span className="font-bold tabular-nums text-slate-900">
+                            {currency(amount)}
+                        </span>{" "}
+                        every month, starting with the first debit when I approve
+                        this mandate, until I cancel. I will be told at least 24
+                        hours before each debit. One debit a month, for the same
+                        amount, for 5 years or until cancelled.
+                    </p>
+
+                    <label className="mt-4 flex cursor-pointer items-start gap-3">
+                        <input
+                            type="checkbox"
+                            checked={consent}
+                            onChange={(event) => {
+                                setConsent(event.target.checked);
+                                setErrors((prev) => ({
+                                    ...prev,
+                                    consent: null,
+                                }));
+                            }}
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-slate-300 accent-blue-600"
+                        />
+                        <span className="text-xs leading-5 text-slate-600">
+                            I agree to the{" "}
+                            <Link
+                                to="/terms"
+                                className="font-medium text-blue-600 underline decoration-slate-300 underline-offset-2 hover:text-blue-700"
+                            >
+                                terms
+                            </Link>{" "}
+                            and{" "}
+                            <Link
+                                to="/privacy"
+                                className="font-medium text-blue-600 underline decoration-slate-300 underline-offset-2 hover:text-blue-700"
+                            >
+                                privacy policy
+                            </Link>
+                            , and to the recurring debit above.
+                        </span>
+                    </label>
+
+                    {errors.consent && (
+                        <p className="mt-2 flex items-center text-xs font-medium text-red-600">
+                            <AlertCircle className="mr-1 h-3 w-3" />
+                            {errors.consent}
+                        </p>
+                    )}
+                </div>
+
+                {/* Submit */}
+                <div className="pt-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                        {loading ? (
+                            <>
+                                <Loader2 className="h-5 w-5 animate-spin" />
+                                Opening secure checkout
+                            </>
+                        ) : (
+                            <>
+                                {`Set up ${currency(amount)} / month`}
+                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </>
+                        )}
+                    </button>
+
+                    <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                        <div className="flex items-center gap-1.5">
+                            <Lock size={12} /> SSL secured
+                        </div>
+                        <div className="h-1 w-1 rounded-full bg-slate-300"></div>
+                        <div className="flex items-center gap-1.5">
+                            <CheckCircle2 size={12} /> {providerName}
+                        </div>
+                    </div>
+
+                    <p className="mt-5 text-center text-xs text-slate-400">
+                        Cancel or skip any month from the link in your receipt.{" "}
+                        <Link
+                            to="/pledge"
+                            className="font-medium text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-700"
+                        >
+                            How monthly giving works
+                        </Link>
+                    </p>
+                </div>
+            </form>
+
+            {errorMessage && (
+                <ErrorCard
+                    message={errorMessage}
+                    setMessage={setErrorMessage}
+                />
+            )}
+        </>
     );
 }
-Field.propTypes = {
-    label: PropTypes.string.isRequired,
-    name: PropTypes.string.isRequired,
-    type: PropTypes.string,
-    placeholder: PropTypes.string,
-    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    onChange: PropTypes.func.isRequired,
-    error: PropTypes.string,
-    hint: PropTypes.string,
-};
-
-Field.defaultProps = {
-    type: "text",
-    placeholder: "",
-    value: "",
-    error: undefined,
-    hint: undefined,
+SectionTitle.propTypes = {
+    step: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
 };
 
 ComingSoon.propTypes = {
