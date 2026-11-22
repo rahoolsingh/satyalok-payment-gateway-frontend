@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import axios from "axios";
 import { openRazorpayCheckout } from "../../utils/razorpayCheckout";
+import ModeSwitch from "./ModeSwitch";
+import MonthlyPledgeForm from "./MonthlyPledgeForm";
 /* eslint-disable react/prop-types -- InputField is a local presentational helper. */
 import {
     Heart,
@@ -83,8 +84,8 @@ function Payment() {
     const [serverStatus, setServerStatus] = useState("checking");
     const [serverVersion, setServerVersion] = useState("");
     const [loading, setLoading] = useState(false);
-    // null = unknown (never renders anything). Only true/false from the API.
-    const [monthly, setMonthly] = useState(null);
+    // Which frequency the donor picked. The switch slides between the two.
+    const [mode, setMode] = useState("once");
     // Which one-time rails are actually configured on this deployment.
     const [providers, setProviders] = useState({ phonepe: true, razorpay: false });
     const [provider, setProvider] = useState("phonepe");
@@ -239,17 +240,6 @@ function Payment() {
         }
     };
 
-    // Probe the monthly-giving capability once. Any failure stays silent: the
-    // one-time donation flow must be unaffected when the API is unreachable.
-    useEffect(() => {
-        if (!BACKEND_URL) return;
-
-        axios
-            .get(`${BACKEND_URL}/pledge/plans`)
-            .then((res) => setMonthly({ available: res.data?.available !== false }))
-            .catch(() => setMonthly(null));
-    }, []);
-
     // Which rails exist on this deployment? Failures fall back to PhonePe, the
     // behaviour this page has always had.
     useEffect(() => {
@@ -331,45 +321,38 @@ function Payment() {
                 </div>
 
                 {/* RIGHT SECTION */}
-                <div className="order-2 flex w-full flex-col bg-white lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto">
+                <div
+                    className={`order-2 flex w-full flex-col lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto ${
+                        mode === "monthly" ? "bg-[#f7f4ee]" : "bg-white"
+                    }`}
+                >
                     <div className="mx-auto w-full max-w-2xl flex-grow px-6 py-10 lg:px-12 lg:py-16">
 
                         <div className="mb-8 border-b border-slate-100 pb-6">
-                            <h2 className="flex items-center gap-3 text-2xl font-bold text-slate-900">
+                            <h2 className="flex items-center gap-3 text-2xl font-semibold text-slate-900">
                                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                                    <Heart className="h-5 w-5 fill-current" />
+                                    {mode === "monthly" ? (
+                                        <Repeat className="h-5 w-5" strokeWidth={1.5} />
+                                    ) : (
+                                        <Heart className="h-5 w-5 fill-current" />
+                                    )}
                                 </span>
-                                Make a Donation
+                                {mode === "monthly" ? "Give monthly" : "Make a donation"}
                             </h2>
-                            <p className="mt-2 text-sm text-slate-500">Choose your impact, claim tax benefits, and securely complete your contribution.</p>
+                            <p className="mt-2 text-sm text-slate-500">
+                                {mode === "monthly"
+                                    ? "One mandate, the same date each month. Cancel or skip any month."
+                                    : "Choose your impact, claim tax benefits, and securely complete your contribution."}
+                            </p>
+
+                            <div className="mt-5">
+                                <ModeSwitch value={mode} onChange={setMode} />
+                            </div>
                         </div>
 
-                        {/* Monthly giving entry point.
-                            Renders nothing at all if the capability check fails, so
-                            this page behaves exactly as it always has. */}
-                        {monthly && (
-                            <div className="mb-8 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                {monthly.available ? (
-                                    <Link
-                                        to="/pledge"
-                                        className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-800 hover:text-blue-700"
-                                    >
-                                        <span className="flex items-center gap-2">
-                                            <Repeat size={16} className="text-slate-500" />
-                                            Give monthly instead, from ₹100 a month
-                                        </span>
-                                        <ArrowRight size={16} className="text-slate-400" />
-                                    </Link>
-                                ) : (
-                                    <p className="flex items-center gap-2 text-sm text-slate-500">
-                                        <Repeat size={16} className="text-slate-400" />
-                                        Monthly giving is coming soon. You can still give once today.
-                                    </p>
-                                )}
-                            </div>
-                        )}
-
-                        <form className="space-y-10">
+                        <form
+                            className={mode === "once" ? "space-y-10" : "hidden"}
+                        >
                             
                             {/* SECTION 1: Amount Section */}
                             <div className="space-y-4">
@@ -419,13 +402,13 @@ function Payment() {
                                 {errors.amount && <p className="text-xs font-medium text-red-600">{errors.amount}</p>}
 
                                 {/* Dynamic Impact Card */}
-                                <div className="mt-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-100 rounded-xl p-4 shadow-sm">
+                                <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
                                     <div className="flex items-start gap-3">
                                         <div className="bg-white p-1.5 rounded-lg shadow-sm text-emerald-600 shrink-0 mt-0.5">
                                             <Sparkles size={16} />
                                         </div>
                                         <div>
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1">Your Impact</h4>
+                                            <h4 className="mb-1 text-xs font-semibold text-emerald-800">Your impact</h4>
                                             {currentAmount >= 500 ? (
                                                 <p className="text-sm font-medium text-emerald-900 leading-snug">
                                                     You are supporting <span className="font-bold text-emerald-700 bg-emerald-200/50 px-1.5 py-0.5 rounded">{childrenSupported} child{childrenSupported > 1 ? 'ren' : ''}</span> with essential education materials.
@@ -580,19 +563,23 @@ function Payment() {
                                     type="button"
                                     disabled={loading}
                                     onClick={handleFormSubmit}
-                                    className="group relative flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-lg font-bold text-white shadow-lg shadow-blue-600/20 transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70 disabled:transform-none"
+                                    className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
                                 >
                                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Proceed to Pay ₹${currentAmount ? currentAmount.toLocaleString() : '0'}`}
                                     {!loading && <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />}
                                 </button>
 
                                 <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                    <div className="flex items-center gap-1.5"><Lock size={12} /> SSL Secured</div>
+                                    <div className="flex items-center gap-1.5"><Lock size={12} /> SSL secured</div>
                                     <div className="w-1 h-1 rounded-full bg-slate-300"></div>
-                                    <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> {provider === "razorpay" ? "Razorpay" : "PhonePe"} Gateway</div>
+                                    <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> {provider === "razorpay" ? "Razorpay" : "PhonePe"}</div>
                                 </div>
                             </div>
                         </form>
+
+                        {mode === "monthly" && (
+                            <MonthlyPledgeForm onSwitchBack={() => setMode("once")} />
+                        )}
 
                         {/* Footer & Status */}
                         <div className="mt-12 border-t border-slate-100 pt-6 text-center">
@@ -605,7 +592,7 @@ function Payment() {
                                     <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${serverStatus === 'alive' ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
                                     <span className={`relative inline-flex h-2 w-2 rounded-full ${serverStatus === 'alive' ? 'bg-emerald-500' : serverStatus === 'checking' ? 'bg-amber-500' : 'bg-red-500'}`}></span>
                                 </span>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                                <span className="text-[11px] font-medium text-slate-500">
                                     System {serverStatus === 'checking' ? 'Connecting' : serverStatus === 'alive' ? `Online (v${serverVersion})` : 'Offline'}
                                 </span>
                             </div>
