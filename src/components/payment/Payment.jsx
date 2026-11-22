@@ -228,45 +228,45 @@ function Payment() {
     }, []);
 
     if (isMaintainanceMode) return <Maintainance />;
-    if (loading) return <div className="flex h-screen items-center justify-center bg-slate-50"><Loading /></div>;
+    if (loading) return <div className="flex h-screen items-center justify-center bg-[#efe9df]"><Loading /></div>;
 
     return (
-        <div className="flex min-h-screen lg:h-screen w-full flex-col overflow-x-hidden bg-white font-sans selection:bg-blue-100 selection:text-blue-900">
+        <div className="flex min-h-screen lg:h-screen w-full flex-col overflow-x-hidden bg-[#f7f4ee] font-sans selection:bg-[#e3d9ca] selection:text-[#1f1b16]">
             <Header />
 
             <div className="flex flex-grow flex-col lg:flex-row lg:h-[calc(100vh-80px)] lg:overflow-hidden relative">
                 
                 {/* LEFT SECTION */}
-                <div className="relative order-1 h-72 lg:h-full lg:w-5/12 xl:w-1/2 overflow-hidden bg-slate-900 flex-shrink-0">
+                <div className="relative order-1 h-72 lg:h-full lg:w-5/12 xl:w-1/2 overflow-hidden bg-[#1f1b16] flex-shrink-0">
                     <img src={bgImage} alt="Donate Background" className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-overlay transition-transform duration-[20s] hover:scale-110" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent lg:bg-gradient-to-r lg:from-slate-900 lg:via-slate-900/80 lg:to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1f1b16] via-[#1f1b16]/60 to-transparent lg:bg-gradient-to-r lg:from-[#1f1b16] lg:via-[#1f1b16]/80 lg:to-transparent" />
 
                     <div className="absolute inset-0 flex flex-col justify-between p-8 lg:p-12 xl:p-16 z-10">
                         <div>
                             <img src={logo} alt="Satyalok" className="mb-8 w-32 opacity-90 lg:w-40" />
-                            <h1 className="mb-4 text-3xl font-bold leading-tight text-white lg:text-5xl">
-                                Empower a Life,<br />Build a Future.
+                            <h1 className="mb-4 text-3xl font-medium leading-tight text-[#fdfbf7] lg:text-5xl">
+                                Fund a school year.<br />Once, or every month.
                             </h1>
-                            <p className="max-w-md text-slate-300 lg:text-lg">
+                            <p className="max-w-md text-[#d6cec2] lg:text-lg">
                                 Your contribution directly funds education and healthcare initiatives for underprivileged communities.
                             </p>
                         </div>
 
                         {/* Dynamic Impact Matrix */}
                         <div className="hidden lg:block w-full max-w-md">
-                            <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 relative min-h-[140px] overflow-hidden shadow-2xl">
+                            <div className="rounded-2xl border border-[#fdfbf7]/15 bg-[#1f1b16]/60 p-6 relative min-h-[140px] overflow-hidden">
                                 {impactFacts.map((fact, idx) => (
                                     <div
                                         key={idx}
-                                        className={`absolute inset-0 p-6 flex flex-col justify-center transition-all duration-700 ease-in-out ${
+                                        className={`absolute inset-0 p-6 flex flex-col justify-center transition-colors duration-700 ease-in-out ${
                                             idx === factIndex
                                                 ? "opacity-100 translate-y-0"
                                                 : "opacity-0 translate-y-4 pointer-events-none"
                                         }`}
                                     >
                                         <div className="flex items-center gap-2 mb-2">
-                                            <Sparkles className="text-emerald-400 h-4 w-4" />
-                                            <h4 className="text-emerald-400 font-bold text-xs tracking-widest uppercase">{fact.title}</h4>
+                                            <Sparkles className="text-[#8fc7a8] h-4 w-4" />
+                                            <h4 className="text-[11px] font-medium text-[#8fc7a8]">{fact.title}</h4>
                                         </div>
                                         <p className="text-white text-lg font-medium leading-relaxed">{fact.desc}</p>
                                     </div>
@@ -277,7 +277,7 @@ function Payment() {
                                 {impactFacts.map((_, idx) => (
                                     <div 
                                         key={idx} 
-                                        className={`h-1 rounded-full transition-all duration-500 ${idx === factIndex ? "w-8 bg-blue-500" : "w-2 bg-white/30"}`} 
+                                        className={`h-1 rounded-full transition-colors duration-500 ${idx === factIndex ? "w-8 bg-[#15803d]" : "w-2 bg-white/30"}`} 
                                     />
                                 ))}
                             </div>
@@ -287,12 +287,12 @@ function Payment() {
                 </div>
 
                 {/* RIGHT SECTION */}
-                <div className="order-2 flex w-full flex-col bg-white lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto">
+                <div className="order-2 flex w-full flex-col bg-[#f7f4ee] lg:h-full lg:w-7/12 xl:w-1/2 lg:overflow-y-auto">
                     <div className="mx-auto w-full max-w-2xl flex-grow px-6 py-10 lg:px-12 lg:py-16">
 
-                        <div className="mb-8 border-b border-slate-100 pb-6">
-                            <h2 className="flex items-center gap-3 text-2xl font-semibold text-slate-900">
-                                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                        <div className="mb-8 border-b border-[rgba(31,27,22,0.09)] pb-6">
+                            <h2 className="flex items-center gap-3 text-2xl font-semibold text-[#1f1b16]">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#efe9df] text-[#0f5fa5]">
                                     {mode === "monthly" ? (
                                         <Repeat className="h-5 w-5" strokeWidth={1.5} />
                                     ) : (
@@ -301,7 +301,7 @@ function Payment() {
                                 </span>
                                 {mode === "monthly" ? "Give monthly" : "Make a donation"}
                             </h2>
-                            <p className="mt-2 text-sm text-slate-500">
+                            <p className="mt-2 text-sm text-[#5e554a]">
                                 {mode === "monthly"
                                     ? "One mandate, the same date each month. Cancel or skip any month."
                                     : "Choose your impact, claim tax benefits, and securely complete your contribution."}
@@ -320,10 +320,10 @@ function Payment() {
                             <div className="space-y-4">
                                 <div>
                                     <div className="flex items-center gap-2 mb-1">
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">1</span>
-                                        <h3 className="text-base font-bold text-slate-900">Contribution Amount</h3>
+                                        <span className="pl-mono w-6 text-[11px] text-[#8a847a]">01</span>
+                                        <h3 className="text-[15px] font-medium text-[#1f1b16]">Contribution Amount</h3>
                                     </div>
-                                    <p className="text-sm text-slate-500 mb-4 ml-8">Select an amount or enter any custom amount.</p>
+                                    <p className="text-sm text-[#5e554a] mb-4 ml-8">Select an amount or enter any custom amount.</p>
                                 </div>
                                 
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -335,10 +335,11 @@ function Payment() {
                                                 setFormData({ ...formData, amount: amt.toString() });
                                                 if (errors.amount) setErrors({ ...errors, amount: null });
                                             }}
-                                            className={`rounded-xl py-3 text-sm font-bold transition-all ${
+                                            aria-pressed={formData.amount === amt.toString()}
+                                            className={`rounded-[10px] py-3 text-sm font-medium transition-[background-color,border-color,transform] ${
                                                 formData.amount === amt.toString()
-                                                    ? "bg-slate-900 text-white shadow-md transform scale-[1.02]"
-                                                    : "bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300"
+                                                    ? "scale-[1.02] bg-[#1f1b16] text-[#fdfbf7] shadow-sm"
+                                                    : "border border-[rgba(31,27,22,0.12)] bg-white text-[#1f1b16] hover:border-[rgba(31,27,22,0.2)] hover:bg-[#faf7f1]"
                                             }`}
                                         >
                                             ₹{amt.toLocaleString()}
@@ -347,36 +348,36 @@ function Payment() {
                                 </div>
 
                                 <div className="relative flex items-center mt-2">
-                                    <span className="absolute left-4 text-slate-400 font-medium text-lg">₹</span>
+                                    <span className="absolute left-4 text-[#8a847a] font-medium text-lg">₹</span>
                                     <input
                                         type="number"
                                         name="amount"
                                         value={formData.amount}
                                         onChange={handleChange}
                                         placeholder="Enter custom amount"
-                                        className={`w-full rounded-xl bg-white px-4 pl-9 py-4 text-lg font-bold text-slate-900 outline-none ring-1 transition-all focus:ring-2 shadow-sm ${
+                                        className={`w-full rounded-xl bg-white px-4 pl-9 py-4 text-lg font-semibold text-[#1f1b16] outline-none ring-1 transition-colors focus:ring-2 shadow-sm ${
                                             errors.amount 
                                                 ? "ring-red-300 focus:ring-red-500 bg-red-50" 
-                                                : "ring-slate-200 focus:ring-blue-600 hover:ring-slate-300"
+                                                : "ring-[rgba(31,27,22,0.14)] focus:ring-[#0f5fa5] hover:ring-[rgba(31,27,22,0.22)]"
                                         }`}
                                     />
                                 </div>
-                                {errors.amount && <p className="text-xs font-medium text-red-600">{errors.amount}</p>}
+                                {errors.amount && <p className="text-xs font-medium text-[#b4463c]">{errors.amount}</p>}
 
                                 {/* Dynamic Impact Card */}
-                                <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
+                                <div className="mt-4 rounded-xl border border-[rgba(31,27,22,0.09)] bg-[#efe9df] p-4">
                                     <div className="flex items-start gap-3">
-                                        <div className="bg-white p-1.5 rounded-lg shadow-sm text-emerald-600 shrink-0 mt-0.5">
+                                        <div className="bg-white p-1.5 rounded-lg shadow-sm text-[#0f5fa5] shrink-0 mt-0.5">
                                             <Sparkles size={16} />
                                         </div>
                                         <div>
-                                            <h4 className="mb-1 text-xs font-semibold text-emerald-800">Your impact</h4>
+                                            <h4 className="mb-1 text-xs font-semibold text-[#1f1b16]">Your impact</h4>
                                             {currentAmount >= 500 ? (
-                                                <p className="text-sm font-medium text-emerald-900 leading-snug">
-                                                    You are supporting <span className="font-bold text-emerald-700 bg-emerald-200/50 px-1.5 py-0.5 rounded">{childrenSupported} child{childrenSupported > 1 ? 'ren' : ''}</span> with essential education materials.
+                                                <p className="text-sm font-medium text-[#5e554a] leading-snug">
+                                                    You are supporting <span className="font-semibold text-[#0f5fa5] bg-[#e3d9ca] px-1.5 py-0.5 rounded">{childrenSupported} child{childrenSupported > 1 ? 'ren' : ''}</span> with essential education materials.
                                                 </p>
                                             ) : currentAmount > 0 ? (
-                                                <p className="text-sm font-medium text-emerald-900 leading-snug">
+                                                <p className="text-sm font-medium text-[#5e554a] leading-snug">
                                                     You&apos;re providing crucial supplies. Add{' '}
                                                     <button 
                                                         type="button" 
@@ -384,34 +385,34 @@ function Payment() {
                                                             setFormData({ ...formData, amount: '500' });
                                                             if (errors.amount) setErrors({ ...errors, amount: null });
                                                         }}
-                                                        className="font-bold text-emerald-700 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-800"
+                                                        className="font-semibold text-[#0f5fa5] underline decoration-[#0f5fa5]/40 underline-offset-2 hover:text-[#1f1b16]"
                                                     >
                                                         ₹{deficitForOneChild} more
                                                     </button>{' '}
                                                     to fully sponsor 1 student!
                                                 </p>
                                             ) : (
-                                                <p className="text-sm font-medium text-emerald-700">Enter an amount above to see your impact.</p>
+                                                <p className="text-sm font-medium text-[#0f5fa5]">Enter an amount above to see your impact.</p>
                                             )}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="h-px w-full bg-slate-100"></div>
+                            <div className="h-px w-full bg-[#efe9df]"></div>
 
                             {/* SECTION 2: Tax Exemption */}
                             <div className="space-y-4">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">2</span>
-                                    <h3 className="text-base font-bold text-slate-900">Tax Benefits</h3>
+                                    <span className="pl-mono w-6 text-[11px] text-[#8a847a]">02</span>
+                                    <h3 className="text-[15px] font-medium text-[#1f1b16]">Tax Benefits</h3>
                                 </div>
                                 
-                                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 transition-all hover:border-slate-300">
+                                <div className="bg-[#efe9df] border border-[rgba(31,27,22,0.12)] rounded-2xl p-5 transition-colors hover:border-[rgba(31,27,22,0.2)]">
                                     <div className="flex items-center justify-between cursor-pointer" onClick={() => setTaxExemption(!taxExemption)}>
                                         <div>
                                             <div className="flex items-center gap-1.5">
-                                                <p className="text-sm font-bold text-slate-900">Claim 80G Tax Exemption?</p>
+                                                <p className="text-sm font-semibold text-[#1f1b16]">Claim 80G Tax Exemption?</p>
                                                 {/* Info Button - Stops propagation so it doesn't trigger the toggle */}
                                                 <button
                                                     type="button"
@@ -419,28 +420,28 @@ function Payment() {
                                                         e.stopPropagation();
                                                         setShow80GInfo(!show80GInfo);
                                                     }}
-                                                    className={`p-1 rounded-full transition-colors ${show80GInfo ? 'text-blue-600 bg-blue-100' : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'}`}
+                                                    className={`p-1 rounded-full transition-colors ${show80GInfo ? 'text-[#0f5fa5] bg-[#efe9df]' : 'text-[#8a847a] hover:text-[#0f5fa5] hover:bg-[#efe9df]'}`}
                                                     title="What is 80G?"
                                                 >
                                                     <Info size={16} />
                                                 </button>
                                             </div>
-                                            <p className="text-xs text-slate-500 mt-0.5">Generate a certificate to save on income tax.</p>
+                                            <p className="text-xs text-[#5e554a] mt-0.5">Generate a certificate to save on income tax.</p>
                                         </div>
-                                        <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${taxExemption ? 'bg-blue-600' : 'bg-slate-300'}`}>
+                                        <div className={`w-12 h-6 rounded-full transition-colors relative flex items-center shrink-0 ${taxExemption ? 'bg-[#1f1b16]' : 'bg-[#c9bfae]'}`}>
                                             <div className={`w-4 h-4 rounded-full bg-white absolute transition-transform duration-300 shadow-sm ${taxExemption ? 'translate-x-7' : 'translate-x-1'}`} />
                                         </div>
                                     </div>
 
                                     {/* Collapsible Info Box */}
-                                    <div className={`transition-all duration-300 ease-in-out overflow-hidden ${show80GInfo ? 'max-h-32 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
-                                        <div className="bg-blue-50/80 border border-blue-100 p-3 rounded-xl text-xs text-blue-800 leading-relaxed shadow-sm">
+                                    <div className={`transition-colors duration-300 ease-in-out overflow-hidden ${show80GInfo ? 'max-h-32 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                                        <div className="bg-[#fdfbf7] border border-[rgba(31,27,22,0.09)] p-3 rounded-xl text-xs text-[#5e554a] leading-relaxed shadow-sm">
                                             <strong>Section 80G</strong> allows you to claim tax deductions on donations made to approved charitable organizations like Satyalok. A tax receipt will be generated automatically after successful payment.
                                         </div>
                                     </div>
 
                                     {/* PAN Input */}
-                                    <div className={`transition-all duration-300 ease-in-out overflow-hidden px-1 ${taxExemption ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
+                                    <div className={`transition-colors duration-300 ease-in-out overflow-hidden px-1 ${taxExemption ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0'}`}>
                                         <InputField
                                             label="PAN Number"
                                             name="pan"
@@ -454,7 +455,7 @@ function Payment() {
                                             error={errors.pan}
                                             icon={CreditCard}
                                         />
-                                        <div className="mt-2 flex items-start gap-2 rounded bg-blue-50/50 p-2 text-xs text-blue-700">
+                                        <div className="mt-2 flex items-start gap-2 rounded bg-[#fdfbf7] p-2 text-xs text-[#0f5fa5]">
                                             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                             <span>Valid PAN is mandatory for 80G tax exemption certificate generation.</span>
                                         </div>
@@ -462,13 +463,13 @@ function Payment() {
                                 </div>
                             </div>
 
-                            <div className="h-px w-full bg-slate-100"></div>
+                            <div className="h-px w-full bg-[#efe9df]"></div>
 
                             {/* SECTION 3: Personal Details */}
                             <div className="space-y-5">
                                 <div className="flex items-center gap-2 mb-2">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">3</span>
-                                    <h3 className="text-base font-bold text-slate-900">Your Details</h3>
+                                    <span className="pl-mono w-6 text-[11px] text-[#8a847a]">03</span>
+                                    <h3 className="text-[15px] font-medium text-[#1f1b16]">Your Details</h3>
                                 </div>
                                 <InputField {...fieldsConfig[0]} value={formData.name} onChange={handleChange} error={errors.name} />
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -479,39 +480,39 @@ function Payment() {
 
                             {(providers.razorpay || !providers.phonepe) && (
                                 <>
-                                    <div className="h-px w-full bg-slate-100"></div>
+                                    <div className="h-px w-full bg-[#efe9df]"></div>
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">4</span>
-                                            <h3 className="text-base font-bold text-slate-900">Payment Method</h3>
+                                            <span className="pl-mono w-6 text-[11px] text-[#8a847a]">04</span>
+                                            <h3 className="text-[15px] font-medium text-[#1f1b16]">Payment Method</h3>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                             {providers.phonepe && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setProvider("phonepe")}
-                                                    className={`rounded-xl border p-4 text-left transition-all ${
+                                                    className={`rounded-xl border p-4 text-left transition-colors ${
                                                         provider === "phonepe"
-                                                            ? "border-blue-600 bg-blue-50/60 ring-2 ring-blue-600/20"
-                                                            : "border-slate-200 bg-white hover:border-slate-300"
+                                                            ? "border-[#1f1b16] bg-[#efe9df] ring-2 ring-[#1f1b16]/10"
+                                                            : "border-[rgba(31,27,22,0.12)] bg-white hover:border-[rgba(31,27,22,0.2)]"
                                                     }`}
                                                 >
-                                                    <span className="block text-sm font-bold text-slate-900">PhonePe</span>
-                                                    <span className="mt-0.5 block text-xs text-slate-500">UPI, cards and wallets</span>
+                                                    <span className="block text-sm font-semibold text-[#1f1b16]">PhonePe</span>
+                                                    <span className="mt-0.5 block text-xs text-[#5e554a]">UPI, cards and wallets</span>
                                                 </button>
                                             )}
                                             {providers.razorpay && (
                                                 <button
                                                     type="button"
                                                     onClick={() => setProvider("razorpay")}
-                                                    className={`rounded-xl border p-4 text-left transition-all ${
+                                                    className={`rounded-xl border p-4 text-left transition-colors ${
                                                         provider === "razorpay"
-                                                            ? "border-blue-600 bg-blue-50/60 ring-2 ring-blue-600/20"
-                                                            : "border-slate-200 bg-white hover:border-slate-300"
+                                                            ? "border-[#1f1b16] bg-[#efe9df] ring-2 ring-[#1f1b16]/10"
+                                                            : "border-[rgba(31,27,22,0.12)] bg-white hover:border-[rgba(31,27,22,0.2)]"
                                                     }`}
                                                 >
-                                                    <span className="block text-sm font-bold text-slate-900">Razorpay</span>
-                                                    <span className="mt-0.5 block text-xs text-slate-500">UPI, cards, netbanking</span>
+                                                    <span className="block text-sm font-semibold text-[#1f1b16]">Razorpay</span>
+                                                    <span className="mt-0.5 block text-xs text-[#5e554a]">UPI, cards, netbanking</span>
                                                 </button>
                                             )}
                                         </div>
@@ -525,15 +526,15 @@ function Payment() {
                                     type="button"
                                     disabled={loading}
                                     onClick={handleFormSubmit}
-                                    className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                                    className="pl-btn-primary"
                                 >
                                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Proceed to Pay ₹${currentAmount ? currentAmount.toLocaleString() : '0'}`}
                                     {!loading && <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />}
                                 </button>
 
-                                <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <div className="mt-6 flex justify-center gap-6 text-[11px] text-[#8a847a]">
                                     <div className="flex items-center gap-1.5"><Lock size={12} /> SSL secured</div>
-                                    <div className="w-1 h-1 rounded-full bg-slate-300"></div>
+                                    <div className="w-1 h-1 rounded-full bg-[#c9bfae]"></div>
                                     <div className="flex items-center gap-1.5"><CheckCircle2 size={12} /> {provider === "razorpay" ? "Razorpay" : "PhonePe"}</div>
                                 </div>
                             </div>
@@ -544,18 +545,23 @@ function Payment() {
                         )}
 
                         {/* Footer & Status */}
-                        <div className="mt-12 border-t border-slate-100 pt-6 text-center">
-                            <p className="text-xs text-slate-400">
-                                By donating, you agree to our <a href="/terms" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-600">Terms</a> and <a href="/privacy" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-600">Privacy Policy</a>.
+                        <div className="mt-12 border-t border-[rgba(31,27,22,0.09)] pt-6 text-center">
+                            <p className="text-xs text-[#8a847a]">
+                                By donating, you agree to our <a href="/terms" className="underline decoration-[rgba(31,27,22,0.2)] underline-offset-2 hover:text-[#5e554a]">Terms</a> and <a href="/privacy" className="underline decoration-[rgba(31,27,22,0.2)] underline-offset-2 hover:text-[#5e554a]">Privacy Policy</a>.
                             </p>
 
-                            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-3 py-1.5 shadow-sm">
-                                <span className="relative flex h-2 w-2">
-                                    <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${serverStatus === 'alive' ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
-                                    <span className={`relative inline-flex h-2 w-2 rounded-full ${serverStatus === 'alive' ? 'bg-emerald-500' : serverStatus === 'checking' ? 'bg-amber-500' : 'bg-red-500'}`}></span>
-                                </span>
-                                <span className="text-[11px] font-medium text-slate-500">
-                                    System {serverStatus === 'checking' ? 'Connecting' : serverStatus === 'alive' ? `Online (v${serverVersion})` : 'Offline'}
+                            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-[rgba(31,27,22,0.09)] bg-[#efe9df] px-3 py-1.5 shadow-sm">
+                                <span
+                                    className={`relative inline-flex h-2 w-2 rounded-full ring-2 ${
+                                        serverStatus === "alive"
+                                            ? "bg-[#15803d] ring-[#15803d]/20"
+                                            : serverStatus === "checking"
+                                              ? "bg-[#b98314] ring-[#b98314]/20"
+                                              : "bg-[#b4463c] ring-[#b4463c]/20"
+                                    }`}
+                                ></span>
+                                <span className="text-[11px] font-medium text-[#5e554a]">
+                                    System {serverStatus === 'checking' ? 'Connecting' : serverStatus === 'alive' ? `Online${serverVersion ? ` · v${serverVersion}` : ""}` : 'Offline'}
                                 </span>
                             </div>
                         </div>

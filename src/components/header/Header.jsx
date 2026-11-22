@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X, Bug } from "lucide-react";
 import logo from "../../assets/logo.png";
 
@@ -42,16 +42,16 @@ export default function Header() {
 
     return (
         <header
-            className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+            className={`sticky top-0 z-50 w-full transition-[background-color,border-color,box-shadow] duration-300 ${
                 // LOGIC UPDATE: 
                 // 1. If Menu is Open: Force solid white background (no transparency).
                 // 2. If Scrolled: White background with slight blur and shadow.
                 // 3. Default: White background.
                 isMenuOpen
-                    ? "bg-white"
+                    ? "border-b border-[rgba(31,27,22,0.09)] bg-[#fdfbf7]"
                     : scrolled
-                        ? "bg-white/95 backdrop-blur-md shadow-sm"
-                        : "bg-white"
+                        ? "border-b border-[rgba(31,27,22,0.09)] bg-[#fdfbf7]/95 backdrop-blur-md"
+                        : "border-b border-[rgba(31,27,22,0.09)] bg-[#fdfbf7]"
                 }`}
         >
             {/* WIDTH UPDATE: Removed 'max-w-7xl' and 'mx-auto' to allow full width */}
@@ -71,7 +71,7 @@ export default function Header() {
                                 <a
                                     key={item.name}
                                     href={item.href}
-                                    className="text-sm font-medium text-gray-700 transition-colors hover:text-blue-700 hover:underline underline-offset-4"
+                                    className="text-sm font-medium text-[#5e554a] transition-colors hover:text-[#0f5fa5] hover:underline underline-offset-4"
                                 >
                                     {item.name}
                                 </a>
@@ -84,7 +84,7 @@ export default function Header() {
                             href="https://wa.me/918210228101?text=Hi%2C%20I%20am%20facing%20an%20issue%20with%20Satyalok%20Donation%20Portal."
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-all hover:bg-red-600 hover:text-white hover:shadow-md"
+                            className="group inline-flex items-center rounded-full border border-red-100 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition-[background-color,color,box-shadow] hover:bg-red-600 hover:text-white hover:shadow-md"
                         >
                             <Bug className="mr-2 h-4 w-4 transition-transform group-hover:rotate-12" />
                             Report Issue
@@ -96,7 +96,7 @@ export default function Header() {
                         <button
                             type="button"
                             onClick={toggleMenu}
-                            className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 transition-colors hover:bg-gray-100 focus:outline-none"
+                            className="inline-flex items-center justify-center rounded-md p-2 text-[#5e554a] transition-colors hover:bg-gray-100 focus:outline-none"
                             aria-label="Toggle menu"
                         >
                             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -117,7 +117,7 @@ export default function Header() {
                             <a
                                 key={item.name}
                                 href={item.href}
-                                className="flex items-center rounded-lg px-4 py-3 text-base font-medium text-gray-900 transition-colors hover:bg-blue-50 hover:text-blue-700"
+                                className="flex items-center rounded-lg px-4 py-3 text-base font-medium text-[#1f1b16] transition-colors hover:bg-[#efe9df] hover:text-[#0f5fa5]"
                                 onClick={() => setIsMenuOpen(false)}
                             >
                                 {item.name}

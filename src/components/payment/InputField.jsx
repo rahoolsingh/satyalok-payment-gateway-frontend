@@ -5,8 +5,8 @@ import { AlertCircle } from "lucide-react";
 /**
  * The single input style used by both donation forms.
  *
- * Kept in its own file so the one-time and monthly forms cannot drift apart:
- * same height, radius, ring, focus state and error treatment everywhere.
+ * Paper-and-ink: white field on a hairline, ink text, blue focus ring. The
+ * shared `pl-field` class keeps this identical to the pledge and portal pages.
  */
 export default function InputField({
     label,
@@ -18,38 +18,44 @@ export default function InputField({
     error,
     icon: Icon,
     hint,
+    idPrefix = "field",
 }) {
+    const inputId = `${idPrefix}-${name}`;
     return (
         <div className="w-full space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700">
+            <label
+                htmlFor={inputId}
+                className="text-[13px] font-medium text-[#5e554a]"
+            >
                 {label}
             </label>
             <div className="relative flex items-center">
                 {Icon && (
-                    <div className="pointer-events-none absolute left-3.5 text-slate-400">
-                        <Icon size={18} />
+                    <div className="pointer-events-none absolute left-3.5 text-[#8a847a]">
+                        <Icon size={18} strokeWidth={1.5} />
                     </div>
                 )}
                 <input
+                    id={inputId}
                     type={type}
                     name={name}
                     placeholder={placeholder}
                     value={value}
                     onChange={onChange}
-                    className={`w-full rounded-xl border-0 bg-slate-50 px-4 py-3.5 text-sm font-medium text-slate-900 outline-none ring-1 transition-all placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:ring-2 ${
-                        error
-                            ? "bg-red-50/50 ring-red-300 focus:ring-red-500"
-                            : "ring-slate-200 hover:ring-slate-300 focus:ring-blue-600"
-                    } ${Icon ? "pl-11" : ""}`}
+                    className={
+                        "pl-field " +
+                        (error ? "pl-field-error " : "") +
+                        (Icon ? "pl-11" : "")
+                    }
                 />
             </div>
             {error ? (
-                <p className="mt-1 flex items-center text-xs font-medium text-red-600">
-                    <AlertCircle className="mr-1 h-3 w-3" />
+                <p className="mt-1 flex items-center gap-1 text-[12px] text-[#b4463c]">
+                    <AlertCircle className="h-3 w-3" />
                     {error}
                 </p>
             ) : (
-                hint && <p className="text-xs text-slate-400">{hint}</p>
+                hint && <p className="text-[12px] text-[#8a847a]">{hint}</p>
             )}
         </div>
     );

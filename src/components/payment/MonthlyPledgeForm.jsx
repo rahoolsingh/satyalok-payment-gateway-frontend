@@ -89,37 +89,37 @@ const currency = (value) =>
 
 const SectionTitle = ({ step, title }) => (
     <div className="mb-1 flex items-center gap-2">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1f1b16] text-xs font-medium text-[#fdfbf7]">
             {step}
         </span>
-        <h3 className="text-base font-bold text-slate-900">{title}</h3>
+        <h3 className="text-base font-medium text-[#1f1b16]">{title}</h3>
     </div>
 );
 
 const ComingSoon = ({ plans, onSwitchBack }) => (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-        <p className="text-xs font-semibold tracking-wide text-slate-400">
+    <div className="rounded-2xl border border-[rgba(31,27,22,0.12)] bg-white p-6 sm:p-8">
+        <p className="text-xs font-semibold tracking-wide text-[#8a847a]">
             Monthly giving
         </p>
-        <h3 className="mt-2 text-xl font-bold text-slate-900">
+        <h3 className="mt-2 text-xl font-medium text-[#1f1b16]">
             Monthly giving is coming soon
         </h3>
-        <p className="mt-3 text-sm leading-6 text-slate-500">
+        <p className="mt-3 text-sm leading-6 text-[#5e554a]">
             We are finishing the bank approvals for automatic monthly debits. A
             one-time donation reaches the same children today.
         </p>
 
         {plans.length > 0 && (
-            <ul className="mt-6 divide-y divide-slate-100 border-t border-slate-100">
+            <ul className="mt-6 divide-y divide-[rgba(31,27,22,0.08)] border-t border-[rgba(31,27,22,0.09)]">
                 {plans.map((plan) => (
                     <li
                         key={plan.id}
                         className="flex items-baseline justify-between py-3"
                     >
-                        <span className="text-sm font-semibold tabular-nums text-slate-800">
+                        <span className="text-sm font-semibold tabular-nums text-[#1f1b16]">
                             {currency(plan.amount)} a month
                         </span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-xs text-[#8a847a]">
                             coming soon
                         </span>
                     </li>
@@ -130,7 +130,7 @@ const ComingSoon = ({ plans, onSwitchBack }) => (
         <button
             type="button"
             onClick={onSwitchBack}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-[10px] bg-[#1f1b16] py-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#332c25]"
         >
             Give once instead
             <ArrowRight className="h-4 w-4" />
@@ -341,12 +341,16 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
     return (
         <>
-            <form onSubmit={handleSubmit} className="space-y-10" noValidate>
+            <form
+            onSubmit={handleSubmit}
+            className="pl-card space-y-8 p-6 sm:p-8"
+            noValidate
+        >
                 {/* SECTION 1: Monthly amount */}
                 <div className="space-y-4">
                     <div>
                         <SectionTitle step={1} title="Monthly amount" />
-                        <p className="mb-4 ml-8 text-sm text-slate-500">
+                        <p className="mb-4 ml-8 text-sm text-[#5e554a]">
                             The same amount is debited on the same date each
                             month. You can change or cancel any time.
                         </p>
@@ -369,18 +373,18 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                             amount: null,
                                         }));
                                     }}
-                                    className={`flex items-baseline justify-center gap-1 rounded-xl py-3 text-sm font-bold transition-all ${
+                                    className={`flex items-baseline justify-center gap-1 rounded-[10px] py-3 text-sm font-medium transition-colors ${
                                         selected
-                                            ? "scale-[1.02] bg-slate-900 text-white shadow-md"
-                                            : "border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-slate-100"
+                                            ? "scale-[1.02] bg-[#1f1b16] text-[#fdfbf7] shadow-md"
+                                            : "border border-[rgba(31,27,22,0.12)] bg-[#efe9df] text-[#5e554a] hover:border-[rgba(31,27,22,0.2)] hover:bg-[rgba(31,27,22,0.08)]"
                                     }`}
                                 >
                                     {currency(plan.amount)}
                                     <span
                                         className={`text-[10px] font-medium ${
                                             selected
-                                                ? "text-slate-300"
-                                                : "text-slate-400"
+                                                ? "text-[#d6cec2]"
+                                                : "text-[#8a847a]"
                                         }`}
                                     >
                                         /mo
@@ -399,10 +403,10 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                     amount: null,
                                 }));
                             }}
-                            className={`rounded-xl py-3 text-sm font-bold transition-all ${
+                            className={`rounded-[10px] py-3 text-sm font-medium transition-colors ${
                                 planId === "custom"
-                                    ? "scale-[1.02] bg-slate-900 text-white shadow-md"
-                                    : "border border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:bg-slate-100"
+                                    ? "scale-[1.02] bg-[#1f1b16] text-[#fdfbf7] shadow-md"
+                                    : "border border-[rgba(31,27,22,0.12)] bg-[#efe9df] text-[#5e554a] hover:border-[rgba(31,27,22,0.2)] hover:bg-[rgba(31,27,22,0.08)]"
                             }`}
                         >
                             Custom
@@ -411,7 +415,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
                     {planId === "custom" && (
                         <div className="relative flex items-center">
-                            <span className="absolute left-4 text-lg font-medium text-slate-400">
+                            <span className="absolute left-4 text-lg font-medium text-[#8a847a]">
                                 ₹
                             </span>
                             <input
@@ -429,17 +433,17 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                         amount: null,
                                     }));
                                 }}
-                                className={`w-full rounded-xl bg-white px-4 py-4 pl-9 text-lg font-bold text-slate-900 outline-none ring-1 transition-all focus:ring-2 ${
+                                className={`w-full rounded-[10px] bg-white px-4 py-4 pl-9 text-lg font-medium text-[#1f1b16] outline-none ring-1 transition-colors focus:ring-2 ${
                                     errors.amount
                                         ? "bg-red-50 ring-red-300 focus:ring-red-500"
-                                        : "ring-slate-200 hover:ring-slate-300 focus:ring-blue-600"
+                                        : "ring-[rgba(31,27,22,0.14)] hover:ring-[rgba(31,27,22,0.22)] focus:ring-[#0f5fa5]"
                                 }`}
                             />
                         </div>
                     )}
 
                     {planId === "custom" && (
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-[#8a847a]">
                             {`Between ${currency(
                                 rules ? rules.minAmount : 100,
                             )} and ${currency(
@@ -449,21 +453,21 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                     )}
 
                     {errors.amount && (
-                        <p className="text-xs font-medium text-red-600">
+                        <p className="text-xs font-medium text-[#b4463c]">
                             {errors.amount}
                         </p>
                     )}
 
-                    <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
+                    <div className="mt-4 rounded-[10px] border border-[rgba(31,27,22,0.09)] bg-[#efe9df] p-4">
                         <div className="flex items-start gap-3">
-                            <div className="mt-0.5 shrink-0 rounded-lg bg-white p-1.5 text-emerald-600 shadow-sm">
+                            <div className="mt-0.5 shrink-0 rounded-lg bg-white p-1.5 text-[#0f5fa5] shadow-sm">
                                 <Sparkles size={16} />
                             </div>
                             <div>
-                                <h4 className="mb-1 text-xs font-semibold text-emerald-800">
+                                <h4 className="mb-1 text-xs font-semibold text-[#1f1b16]">
                                     Your impact
                                 </h4>
-                                <p className="text-sm font-medium leading-snug text-emerald-900">
+                                <p className="text-sm font-medium leading-snug text-[#5e554a]">
                                     {selectedPlan?.impact ||
                                         "Enter an amount to see the impact."}
                                 </p>
@@ -472,20 +476,20 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                     </div>
                 </div>
 
-                <div className="h-px w-full bg-slate-100"></div>
+                <div className="h-px w-full bg-[rgba(31,27,22,0.08)]"></div>
 
                 {/* SECTION 2: Tax benefits */}
                 <div className="space-y-4">
                     <SectionTitle step={2} title="Tax benefits" />
 
-                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 transition-colors hover:border-slate-300">
+                    <div className="rounded-2xl border border-[rgba(31,27,22,0.12)] bg-[#efe9df] p-5 transition-colors hover:border-[rgba(31,27,22,0.2)]">
                         <div
                             className="flex cursor-pointer items-center justify-between"
                             onClick={() => setWant80G(!want80G)}
                         >
                             <div>
                                 <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-bold text-slate-900">
+                                    <p className="text-sm font-medium text-[#1f1b16]">
                                         Claim 80G tax exemption?
                                     </p>
                                     <button
@@ -496,22 +500,22 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                         }}
                                         className={`rounded-full p-1 transition-colors ${
                                             show80GInfo
-                                                ? "bg-blue-100 text-blue-600"
-                                                : "text-slate-400 hover:bg-blue-50 hover:text-blue-600"
+                                                ? "bg-[#efe9df] text-[#0f5fa5]"
+                                                : "text-[#8a847a] hover:bg-[#efe9df] hover:text-[#0f5fa5]"
                                         }`}
                                         title="What is 80G?"
                                     >
                                         <Info size={16} />
                                     </button>
                                 </div>
-                                <p className="mt-0.5 text-xs text-slate-500">
+                                <p className="mt-0.5 text-xs text-[#5e554a]">
                                     A certificate is attached to every monthly
                                     receipt.
                                 </p>
                             </div>
                             <div
                                 className={`relative flex h-6 w-12 shrink-0 items-center rounded-full transition-colors ${
-                                    want80G ? "bg-blue-600" : "bg-slate-300"
+                                    want80G ? "bg-[#1f1b16]" : "bg-[#c9bfae]"
                                 }`}
                             >
                                 <div
@@ -525,7 +529,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                         </div>
 
                         {show80GInfo && (
-                            <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50/80 p-3 text-xs leading-relaxed text-blue-800">
+                            <div className="mt-4 rounded-[10px] border border-[rgba(31,27,22,0.09)] bg-[#efe9df]/80 p-3 text-xs leading-relaxed text-[#5e554a]">
                                 <strong>Section 80G</strong> allows you to claim
                                 tax deductions on donations made to approved
                                 charitable organizations like Satyalok. A tax
@@ -537,6 +541,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                         {want80G && (
                             <div className="mt-4 px-1">
                                 <InputField
+                        idPrefix="monthly"
                                     label="PAN number"
                                     name="pan"
                                     type="text"
@@ -560,13 +565,14 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                     </div>
                 </div>
 
-                <div className="h-px w-full bg-slate-100"></div>
+                <div className="h-px w-full bg-[rgba(31,27,22,0.08)]"></div>
 
                 {/* SECTION 3: Your details */}
                 <div className="space-y-5">
                     <SectionTitle step={3} title="Your details" />
 
                     <InputField
+                        idPrefix="monthly"
                         label="Full name"
                         name="name"
                         type="text"
@@ -579,6 +585,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <InputField
+                        idPrefix="monthly"
                             label="Email address"
                             name="email"
                             type="email"
@@ -589,6 +596,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                             icon={Mail}
                         />
                         <InputField
+                        idPrefix="monthly"
                             label="Mobile number"
                             name="phone"
                             type="tel"
@@ -602,6 +610,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
 
                     {capability?.requiresVpa !== false && (
                         <InputField
+                        idPrefix="monthly"
                             label="UPI ID to debit"
                             name="vpa"
                             type="text"
@@ -616,13 +625,13 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                 </div>
 
                 {/* Authorisation */}
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <div className="rounded-2xl border border-[rgba(31,27,22,0.12)] bg-[#efe9df] p-5">
+                    <p className="text-xs font-medium uppercase tracking-wider text-[#8a847a]">
                         Authorisation
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-2 text-sm leading-6 text-[#5e554a]">
                         I authorise Satyalok to debit{" "}
-                        <span className="font-bold tabular-nums text-slate-900">
+                        <span className="font-medium tabular-nums text-[#1f1b16]">
                             {currency(amount)}
                         </span>{" "}
                         every month, starting with the first debit when I approve
@@ -642,20 +651,20 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                                     consent: null,
                                 }));
                             }}
-                            className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-slate-300 accent-blue-600"
+                            className="mt-0.5 h-4 w-4 shrink-0 rounded-[4px] border-[rgba(31,27,22,0.2)] accent-[#0f5fa5]"
                         />
-                        <span className="text-xs leading-5 text-slate-600">
+                        <span className="text-xs leading-5 text-[#5e554a]">
                             I agree to the{" "}
                             <Link
                                 to="/terms"
-                                className="font-medium text-blue-600 underline decoration-slate-300 underline-offset-2 hover:text-blue-700"
+                                className="font-medium text-[#0f5fa5] underline decoration-[rgba(31,27,22,0.2)] underline-offset-2 hover:text-[#0f5fa5]"
                             >
                                 terms
                             </Link>{" "}
                             and{" "}
                             <Link
                                 to="/privacy"
-                                className="font-medium text-blue-600 underline decoration-slate-300 underline-offset-2 hover:text-blue-700"
+                                className="font-medium text-[#0f5fa5] underline decoration-[rgba(31,27,22,0.2)] underline-offset-2 hover:text-[#0f5fa5]"
                             >
                                 privacy policy
                             </Link>
@@ -664,7 +673,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                     </label>
 
                     {errors.consent && (
-                        <p className="mt-2 flex items-center text-xs font-medium text-red-600">
+                        <p className="mt-2 flex items-center text-xs font-medium text-[#b4463c]">
                             <AlertCircle className="mr-1 h-3 w-3" />
                             {errors.consent}
                         </p>
@@ -676,7 +685,7 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="group flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-4 text-lg font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="pl-btn-primary mt-1"
                     >
                         {loading ? (
                             <>
@@ -691,21 +700,21 @@ export default function MonthlyPledgeForm({ onSwitchBack }) {
                         )}
                     </button>
 
-                    <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                    <div className="mt-6 flex justify-center gap-6 text-[11px] font-semibold uppercase tracking-wider text-[#8a847a]">
                         <div className="flex items-center gap-1.5">
                             <Lock size={12} /> SSL secured
                         </div>
-                        <div className="h-1 w-1 rounded-full bg-slate-300"></div>
+                        <div className="h-1 w-1 rounded-full bg-[#c9bfae]"></div>
                         <div className="flex items-center gap-1.5">
                             <CheckCircle2 size={12} /> {providerName}
                         </div>
                     </div>
 
-                    <p className="mt-5 text-center text-xs text-slate-400">
+                    <p className="mt-5 text-center text-xs text-[#8a847a]">
                         Cancel or skip any month from the link in your receipt.{" "}
                         <Link
                             to="/pledge"
-                            className="font-medium text-slate-500 underline decoration-slate-300 underline-offset-2 hover:text-slate-700"
+                            className="font-medium text-[#5e554a] underline decoration-[rgba(31,27,22,0.2)] underline-offset-2 hover:text-[#1f1b16]"
                         >
                             How monthly giving works
                         </Link>

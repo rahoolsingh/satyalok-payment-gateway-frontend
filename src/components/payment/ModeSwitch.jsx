@@ -4,10 +4,8 @@ import { Heart, Repeat } from "lucide-react";
 /**
  * Segmented control for donation frequency.
  *
- * The white pill is one element that slides between the two labels, so the
- * change of mode reads as a single motion instead of two buttons swapping
- * styles. Width is exactly half of the inner grid, so translateX(100%) lands on
- * the second segment without magic numbers.
+ * Paper-and-ink: a warm track, a paper pill that slides, ink text. The only
+ * colour is the blue accent on the active icon.
  */
 
 const OPTIONS = [
@@ -25,12 +23,12 @@ export default function ModeSwitch({ value, onChange }) {
         <div
             role="tablist"
             aria-label="Donation frequency"
-            className="rounded-xl border border-slate-200 bg-slate-100 p-1"
+            className="rounded-xl border border-[rgba(31,27,22,0.09)] bg-[#efe9df] p-1"
         >
             <div className="relative grid grid-cols-2">
                 <span
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-y-0 left-0 w-1/2 rounded-lg bg-white shadow-sm ring-1 ring-slate-900/5 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                    className="pointer-events-none absolute inset-y-0 left-0 w-1/2 rounded-[8px] bg-[#fdfbf7] shadow-sm ring-1 ring-[rgba(31,27,22,0.06)] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
                     style={{ transform: `translateX(${index * 100}%)` }}
                 />
                 {OPTIONS.map(({ id, label, Icon }) => {
@@ -43,16 +41,18 @@ export default function ModeSwitch({ value, onChange }) {
                             role="tab"
                             aria-selected={active}
                             onClick={() => onChange(id)}
-                            className={`relative z-10 flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm transition-colors duration-200 ${
+                            className={`relative z-10 flex items-center justify-center gap-2 rounded-[8px] py-2.5 text-sm transition-colors duration-200 ${
                                 active
-                                    ? "font-semibold text-slate-900"
-                                    : "font-medium text-slate-500 hover:text-slate-700"
+                                    ? "font-medium text-[#1f1b16]"
+                                    : "font-normal text-[#8a847a] hover:text-[#5e554a]"
                             }`}
                         >
                             <Icon
                                 size={16}
                                 strokeWidth={1.5}
-                                className={active ? "text-blue-600" : "text-slate-400"}
+                                className={
+                                    active ? "text-[#0f5fa5]" : "text-[#8a847a]"
+                                }
                             />
                             {label}
                         </button>
@@ -62,6 +62,7 @@ export default function ModeSwitch({ value, onChange }) {
         </div>
     );
 }
+
 ModeSwitch.propTypes = {
     value: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
